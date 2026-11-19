@@ -2,21 +2,14 @@
 
 import { useState } from 'react';
 
-async function request(path, { token, body, method = 'GET' } = {}) {
-  const headers = {};
-  if (body) headers['Content-Type'] = 'application/json';
-  if (token) headers.Authorization = `Bearer ${token}`;
-  const response = await fetch(path, { headers, method, body: body ? JSON.stringify(body) : undefined });
-  if (response.status === 204) return;
-  const data = await response.json();
-  if (!response.ok) throw new Error(data.message ?? 'Request failed.');
-  return data;
-}
+import { request } from './api-client';
+import WorkspaceDashboard from './workspace-dashboard';
 
 export default function AccountWorkspaces({ initialMode }) {
   const [mode, setMode] = useState(initialMode);
   const [token, setToken] = useState('');
   const [workspaces, setWorkspaces] = useState([]);
+  const [workspace, selectWorkspace] = useState(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -51,8 +44,13 @@ export default function AccountWorkspaces({ initialMode }) {
     return run(async () => {
       const item = await request('/api/workspaces', { token, method: 'POST', body: { name } });
       setWorkspaces((current) => [item, ...current]);
+      selectWorkspace(item);
       form.reset();
     });
+  }
+
+  if (token && workspace) {
+    return <section><WorkspaceDashboard key={workspace.id} workspace={workspace} token={token} onBack={() => selectWorkspace(null)} /></section>;
   }
 
   return (
@@ -65,7 +63,7 @@ export default function AccountWorkspaces({ initialMode }) {
             <button disabled={busy}>Create workspace</button>
           </form>
           {workspaces.length ? <ul>{workspaces.map((item) => (
-            <li key={item.id}>{item.name} · {item.role}</li>
+            <li key={item.id}><button type="button" className="secondary" onClick={() => selectWorkspace(item)}>{item.name} · {item.role}</button></li>
           ))}</ul> : <p>No workspaces yet.</p>}
           <button disabled={busy} onClick={() => run(async () => {
             await request('/api/auth/signout', { token, method: 'POST' });

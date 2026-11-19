@@ -57,3 +57,15 @@ Open http://localhost:3000 for the landing page or http://localhost:3000/sign-in
 | `frontend/src/app/sign-up/page.jsx` | Sign-up entry point |
 | `frontend/src/features/workspaces/account-page.jsx` | Account layout and animated team workflow |
 | `frontend/public/workflow-preview.mp4` | Product concept video using illustrative data |
+
+## Workspace dashboard and payment sources
+
+After signing in, create or select a workspace to open its dashboard. Admin and Finance members can register corporate cards with a nickname and optional last four digits. Use a different nickname for each card in a workspace. The dashboard is part of the current account screen and uses its in-memory session.
+
+| Path | Responsibility |
+| --- | --- |
+| `frontend/src/features/workspaces/workspace-dashboard.jsx` | Selected workspace and payment-source list and form |
+| `frontend/src/features/workspaces/api-client.js` | Same-origin JSON requests for account and workspace features |
+| `backend/src/modules/payment-sources/payment-source.routes.js` | Workspace membership checks, validation and payment-source persistence |
+
+CSV statement import is the next consumer of these payment sources.

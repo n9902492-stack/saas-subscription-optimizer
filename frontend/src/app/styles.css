@@ -33,3 +33,6 @@ button:disabled { opacity: .65; }
 @keyframes enter { from { transform: translateY(12px); opacity: 0; } }
 @media (max-width: 760px) { .hero, .account { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .team-steps li { animation: none; } }
+.secondary { color: var(--accent); background: transparent; border: 1px solid #829998; }
+.payment-panel { border-top: 1px solid #cad7d3; margin-top: 1.25rem; padding-top: .75rem; }
+.payment-panel li, .account-main li { margin-bottom: .5rem; }
