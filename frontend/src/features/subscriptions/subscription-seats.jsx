@@ -13,9 +13,15 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [page, setPage] = useState(0);
+  const [organization, setOrganization] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
+    request(`${url}/copilot`, { token, signal: controller.signal }).then(({ organization: org }) => {
+      if (!controller.signal.aborted) setOrganization(org);
+    }).catch(() => {
+      if (!controller.signal.aborted) setOrganization(null);
+    });
     request(url, { token, signal: controller.signal })
       .then((snapshot) => {
         if (!controller.signal.aborted) setState({ snapshot });
@@ -53,6 +59,22 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
     }
   }
 
+  async function syncCopilot() {
+    setError('');
+    setSaving(true);
+    try {
+      const snapshot = await request(`${url}/copilot`, {
+        token, method: 'POST', body: { expectedRevision: state.snapshot?.revision ?? null },
+      });
+      setState({ snapshot });
+      setPage(0);
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const snapshot = state?.snapshot;
   function reload() {
     setError('');
@@ -70,7 +92,7 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
         <>
           {snapshot ? (
             <>
-              <p>CSV snapshot as of {snapshot.asOf} · {snapshot.seats.length} assigned · {snapshot.purchasedSeats ?? 'Unknown'} purchased</p>
+              <p>{snapshot.source === 'copilot' ? `GitHub Copilot (${snapshot.organization})` : 'CSV'} snapshot as of {snapshot.asOf} · {snapshot.seats.length} assigned · {snapshot.purchasedSeats ?? 'Unknown'} purchased</p>
               <p>{snapshot.counts.active} active · {snapshot.counts.candidate} review candidates · {snapshot.counts.unknown} unknown</p>
               {snapshot.purchasedSeats !== null && <p>{snapshot.purchasedSeats >= snapshot.seats.length
                 ? `${snapshot.purchasedSeats - snapshot.seats.length} unassigned`
@@ -90,6 +112,12 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
               </div>
             </>
           ) : <p>No seat snapshot saved.</p>}
+          {organization && (
+            <div>
+              <p>Syncing replaces this snapshot with assigned seats from {organization}. Missing GitHub activity stays Unknown.</p>
+              <button type="button" disabled={saving} onClick={syncCopilot}>Sync GitHub Copilot seats</button>
+            </div>
+          )}
           <p>Use one row per assigned license with <code>account,last_activity</code> headers. Leave activity blank if unknown, or enter YYYY-MM-DD. Activity reported {snapshot?.inactivityDays ?? 60}+ days before the snapshot is a review candidate.</p>
           <form onSubmit={submit}>
             <label>Snapshot date<input name="asOf" type="date" required /></label>

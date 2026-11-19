@@ -137,3 +137,9 @@ Admin and Finance can open View history for a verified renewal. Each successful 
 ### CSV license seat review
 
 In Subscriptions and contracts, choose Review seats. Admin and Finance can replace the latest per-subscription seat snapshot with a UTF-8 CSV of 1–1,000 assigned seats. Use account and last_activity headers, one account per row, and YYYY-MM-DD dates. Blank activity remains Unknown. Reported activity 60 or more days before the snapshot date marks a candidate for review. Enter purchased seats to see unassigned seats or a purchasing discrepancy. The system stores normalized rows and import metadata. Live provider sync is separate.
+
+### Read-only GitHub Copilot seat sync
+
+Set COPILOT_WORKSPACE_ID (the MongoDB workspace ID), COPILOT_ORG (the GitHub organization slug), and COPILOT_READ_TOKEN in backend/.env, then restart Express. Use an authorized fine-grained token with GitHub Copilot Business organization Read permission. Keep the token server-side. In the configured workspace, Admin and Finance can open Review seats on the relevant Copilot subscription and select Sync GitHub Copilot seats. The action replaces the latest snapshot only after every page succeeds and the seat count reconciles. It preserves any manually entered purchased-seat count. Missing activity remains Unknown. CSV upload stays available. The connector uses GitHub's public-preview seat endpoint and does not modify GitHub licenses.
+
+GitHub documentation: https://docs.github.com/en/rest/copilot/copilot-user-management#list-all-copilot-seat-assignments-for-an-organization
