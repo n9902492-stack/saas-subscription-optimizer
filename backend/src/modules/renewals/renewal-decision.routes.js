@@ -52,6 +52,29 @@ export function renewalDecisionRoutes(database, requireSession) {
     });
   });
 
+  router.get('/:subscriptionId/history', async (request, response) => {
+    if (!request.canReviewAll) {
+      return response.status(403).json({ message: 'History requires Admin or Finance access.' });
+    }
+    const id = request.params.subscriptionId;
+    if (!objectIdPattern.test(id)) return response.status(404).json({ message: 'Renewal not found.' });
+    const record = await subscriptions.findOne(
+      { _id: new ObjectId(id), workspaceId: request.workspaceId },
+      { projection: { renewalHistory: 1 } },
+    );
+    if (!record) return response.status(404).json({ message: 'Renewal not found.' });
+
+    const events = record.renewalHistory ?? [];
+    const users = await database.collection('users').find(
+      { _id: { $in: events.map((event) => event.recordedBy) } },
+      { projection: { email: 1 } },
+    ).toArray();
+    const emails = new Map(users.map((user) => [user._id.toHexString(), user.email]));
+    response.json(events.reverse().map(({ recordedBy, ...event }) => ({
+      ...event, actor: emails.get(recordedBy.toHexString()) ?? recordedBy.toHexString(),
+    })));
+  });
+
   router.put('/:subscriptionId', async (request, response) => {
     const id = request.params.subscriptionId;
     if (!objectIdPattern.test(id)) return response.status(404).json({ message: 'Renewal not found.' });
@@ -79,7 +102,11 @@ export function renewalDecisionRoutes(database, requireSession) {
       seatsToReduce: action === 'reduce-seats' ? seatsToReduce : null,
       recordedBy: request.session.userId, recordedAt: new Date(),
     };
-    const updated = await subscriptions.findOneAndUpdate(filter, { $set: { renewalDecision: decision }, $unset: { renewalExecution: '' } }, {
+    const updated = await subscriptions.findOneAndUpdate(filter, {
+      $set: { renewalDecision: decision },
+      $unset: { renewalExecution: '' },
+      $push: appendHistory({ ...decision, type: 'decision' }),
+    }, {
       projection: selectFields, returnDocument: 'after',
     });
     if (!updated) {
@@ -110,7 +137,7 @@ export function renewalDecisionRoutes(database, requireSession) {
       'renewalExecution.revision': executionRevision,
       $expr: { $eq: ['$noticeDeadline', '$renewalDecision.noticeDeadline'] },
     };
-    const current = await subscriptions.findOne(filter, { projection: { renewalExecution: 1 } });
+    const current = await subscriptions.findOne(filter, { projection: { renewalExecution: 1, noticeDeadline: 1 } });
     const conflict = () => response.status(409).json({ message: 'The renewal changed. Refresh and try again.' });
     if (!current) return conflict();
     if (!transitions[current.renewalExecution?.status ?? 'pending']?.includes(status)) {
@@ -120,7 +147,13 @@ export function renewalDecisionRoutes(database, requireSession) {
       status, note, decisionRevision, revision: new ObjectId().toHexString(),
       recordedAt: new Date(), recordedBy: request.session.userId,
     };
-    const updated = await subscriptions.findOneAndUpdate(filter, { $set: { renewalExecution: execution } }, {
+    const updated = await subscriptions.findOneAndUpdate(filter, {
+      $set: { renewalExecution: execution },
+      $push: appendHistory({
+        ...execution, type: 'execution', noticeDeadline: current.noticeDeadline,
+        previousStatus: current.renewalExecution?.status ?? 'pending',
+      }),
+    }, {
       projection: selectFields, returnDocument: 'after',
     });
     if (!updated) return conflict();
@@ -137,6 +170,11 @@ function toResponse({ _id, name, vendor, ownerId, noticeDeadline, renewalDecisio
     canDecide: ownerId.equals(userId),
     decision,
     canTrackExecution: canReviewAll && !!decision,
+    canViewHistory: canReviewAll,
     execution: decision && renewalExecution?.decisionRevision === decision.revision ? renewalExecution : null,
   };
+}
+
+function appendHistory(event) {
+  return { renewalHistory: { $each: [event], $slice: -100 } };
 }
