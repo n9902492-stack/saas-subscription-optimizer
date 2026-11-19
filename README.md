@@ -68,4 +68,15 @@ After signing in, create or select a workspace to open its dashboard. Admin and 
 | `frontend/src/features/workspaces/api-client.js` | Same-origin JSON requests for account and workspace features |
 | `backend/src/modules/payment-sources/payment-source.routes.js` | Workspace membership checks, validation and payment-source persistence |
 
-CSV statement import is the next consumer of these payment sources.
+Use the registered payment source when importing a CSV statement.
+
+## Statement import
+
+Admin and Finance can upload a UTF-8 CSV (128 KiB or 1,000 transactions maximum), map four columns, preview samples and validation errors, and confirm the batch. Dates use YYYY-MM-DD, amounts use signed decimals, and currencies use a three-letter code. Amounts are stored as MongoDB Decimal128. Invalid batches cannot be saved. The database prevents duplicate normalized batches for the same workspace and card. Overlapping statements with partially shared transactions require future transaction-level reconciliation. The backend stores normalized rows and discards the input CSV.
+
+| Path | Responsibility |
+| --- | --- |
+| `frontend/src/features/imports/statement-import.jsx` | File selection, mapping, preview and confirmation |
+| `backend/src/modules/imports/statement-import.routes.js` | Scoped API and atomic batch persistence |
+| `backend/src/modules/imports/statement-import.service.js` | CSV parsing, validation, normalization and duplicate fingerprint |
+| `backend/src/modules/workspaces/finance-access.js` | Shared Admin and Finance authorization for workspace data |

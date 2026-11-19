@@ -3,15 +3,18 @@ import { rateLimit } from 'express-rate-limit';
 import { authModule } from './modules/auth/auth.js';
 import { workspaceRepository } from './modules/workspaces/workspace.repository.js';
 import { workspaceRoutes } from './modules/workspaces/workspace.routes.js';
+import { statementImportRoutes } from './modules/imports/statement-import.routes.js';
 import { paymentSourceRoutes } from './modules/payment-sources/payment-source.routes.js';
 
 export async function createApp(database) {
   const app = express();
   app.disable('x-powered-by');
-  app.use(express.json({ limit: '8kb' }));
-
   const auth = authModule(database);
   await auth.initialize();
+  app.use('/api/workspaces/:workspaceId/statement-imports', express.json({ limit: '800kb' }),
+    await statementImportRoutes(database, auth.requireSession));
+  app.use(express.json({ limit: '8kb' }));
+
   const authLimiter = rateLimit({
     windowMs: 60_000,
     limit: 30,

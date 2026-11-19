@@ -36,3 +36,7 @@ button:disabled { opacity: .65; }
 .secondary { color: var(--accent); background: transparent; border: 1px solid #829998; }
 .payment-panel { border-top: 1px solid #cad7d3; margin-top: 1.25rem; padding-top: .75rem; }
 .payment-panel li, .account-main li { margin-bottom: .5rem; }
+select { font: inherit; padding: .55rem .75rem; border: 1px solid #829998; border-radius: .4rem; }
+.statement-table { overflow-x: auto; margin: 0 0 .75rem; }
+.statement-table table { width: 100%; border-collapse: collapse; }
+.statement-table th, .statement-table td { text-align: left; padding: .4rem; border-bottom: 1px solid #cad7d3; }

@@ -1,32 +1,12 @@
 import { Router } from 'express';
-import { ObjectId } from 'mongodb';
+import { financeAccess } from '../workspaces/finance-access.js';
 
 export async function paymentSourceRoutes(database, requireSession) {
   const router = Router({ mergeParams: true });
-  const workspaces = database.collection('workspaces');
   const sources = database.collection('paymentSources');
   await sources.createIndex({ workspaceId: 1, labelKey: 1 }, { unique: true });
 
-  router.use(requireSession, async (request, response, next) => {
-    const id = request.params.workspaceId;
-    if (!/^[a-f0-9]{24}$/i.test(id)) {
-      return response.status(404).json({ message: 'Workspace not found.' });
-    }
-
-    const workspaceId = new ObjectId(id);
-    const userId = request.session.userId;
-    const workspace = await workspaces.findOne(
-      { _id: workspaceId, 'members.userId': userId },
-      { projection: { members: { $elemMatch: { userId } } } },
-    );
-    if (!workspace) return response.status(404).json({ message: 'Workspace not found.' });
-    if (!['Admin', 'Finance'].includes(workspace.members[0].role)) {
-      return response.status(403).json({ message: 'Payment sources require Admin or Finance access.' });
-    }
-
-    request.workspaceId = workspaceId;
-    next();
-  });
+  router.use(requireSession, financeAccess(database));
 
   router.get('/', async (request, response) => {
     const items = await sources.find(
