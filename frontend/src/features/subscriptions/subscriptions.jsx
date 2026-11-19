@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
 
-export default function Subscriptions({ workspaceId, token, vendorRevision }) {
+export default function Subscriptions({ workspaceId, token, vendorRevision, onSaved }) {
   const endpoint = `/api/workspaces/${workspaceId}/subscriptions`;
   const [data, setData] = useState(null);
   const [page, setPage] = useState(1);
@@ -40,6 +40,7 @@ export default function Subscriptions({ workspaceId, token, vendorRevision }) {
         token, method: editing.id ? 'PUT' : 'POST', body,
       });
       setEditing(null);
+      onSaved();
       setPage(1);
       setRevision((value) => value + 1);
     } catch (error) {

@@ -6,6 +6,7 @@ import StatementImport from '../imports/statement-import';
 import TransactionList from '../transactions/transaction-list';
 import VendorInventory from '../vendors/vendor-inventory';
 import Subscriptions from '../subscriptions/subscriptions';
+import RenewalCalendar from '../renewals/renewal-calendar';
 
 export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const endpoint = `/api/workspaces/${workspace.id}/payment-sources`;
@@ -17,6 +18,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const [saving, setSaving] = useState(false);
   const [importVersion, setImportVersion] = useState(0);
   const [matchVersion, setMatchVersion] = useState(0);
+  const [subscriptionVersion, setSubscriptionVersion] = useState(0);
 
   useEffect(() => {
     if (!canManageSources) return;
@@ -87,7 +89,8 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
       )}
       {canManageSources && <TransactionList workspaceId={workspace.id} token={token} importVersion={importVersion} onMatched={() => setMatchVersion((value) => value + 1)} />}
       {canManageSources && <VendorInventory workspaceId={workspace.id} token={token} revision={importVersion + matchVersion} />}
-      {canManageSources && <Subscriptions workspaceId={workspace.id} token={token} vendorRevision={matchVersion} />}
+      {canManageSources && <Subscriptions workspaceId={workspace.id} token={token} vendorRevision={matchVersion} onSaved={() => setSubscriptionVersion((value) => value + 1)} />}
+      {canManageSources && <RenewalCalendar workspaceId={workspace.id} token={token} revision={subscriptionVersion} />}
     </div>
   );
 }

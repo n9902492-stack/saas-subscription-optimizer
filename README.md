@@ -108,3 +108,12 @@ Admin and Finance can create or edit subscription records for a matched vendor o
 | --- | --- |
 | `backend/src/modules/subscriptions/subscription.routes.js` | Workspace-scoped records, membership checks and notice validation |
 | `frontend/src/features/subscriptions/subscriptions.jsx` | Subscription list and contract form |
+
+## Renewal calendar
+
+Admin and Finance can browse the month-by-month calendar and review the next 30 calendar days, including today. Both views use verified notice deadlines. The upcoming window uses UTC and keeps contract end as a separate field. Counts show past verified deadlines and subscriptions that still need verification. Subscription edits refresh the calendar.
+
+| Path | Responsibility |
+| --- | --- |
+| `backend/src/modules/renewals/renewal.routes.js` | Workspace-scoped calendar data, upcoming window, counts and owner labels |
+| `frontend/src/features/renewals/renewal-calendar.jsx` | Month navigation and upcoming notice deadlines |
