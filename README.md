@@ -124,4 +124,8 @@ The workspace dashboard derives in-app reminders from current verified notice de
 
 ### Renewal decisions
 
-For a verified notice deadline, the assigned owner can record Keep, Reduce seats, Review overlap, or Cancel with a reason. Reduce seats also requires a proposed seat count. Admin and Finance can review all decisions in their workspace. Other members only see renewals assigned to them. Changing the notice date clears the prior current decision. Cancel records a decision for follow-up with the vendor. Decision history and external execution tracking are future work.
+For a verified notice deadline, the assigned owner can record Keep, Reduce seats, Review overlap, or Cancel with a reason. Reduce seats also requires a proposed seat count. Admin and Finance can review all decisions in their workspace. Other members only see renewals assigned to them. Changing the notice date clears the prior current decision. Cancel records a decision for follow-up with the vendor. Decision history remains future work.
+
+### Vendor execution status
+
+Admin and Finance can record vendor follow-up as Submitted, Confirmed, or Reopened. Each update requires a vendor reference or reason and stores the actor and timestamp. Owners can see the current status for their renewals. A revised decision starts again at Pending. The workflow records actions handled with the vendor outside the app.

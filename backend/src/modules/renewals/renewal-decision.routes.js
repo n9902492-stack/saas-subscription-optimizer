@@ -2,9 +2,15 @@ import { Router } from 'express';
 import { ObjectId } from 'mongodb';
 
 const choices = ['keep', 'reduce-seats', 'review-overlap', 'cancel'];
+const transitions = {
+  pending: ['submitted', 'confirmed'],
+  submitted: ['confirmed', 'reopened'],
+  confirmed: ['reopened'],
+  reopened: ['submitted', 'confirmed'],
+};
 const objectIdPattern = /^[a-f0-9]{24}$/i;
 const selectFields = {
-  name: 1, vendor: 1, ownerId: 1, noticeDeadline: 1, renewalDecision: 1,
+  name: 1, vendor: 1, ownerId: 1, noticeDeadline: 1, renewalDecision: 1, renewalExecution: 1,
 };
 
 export function renewalDecisionRoutes(database, requireSession) {
@@ -41,7 +47,7 @@ export function renewalDecisionRoutes(database, requireSession) {
     const rows = await subscriptions.find(filter, { projection: selectFields })
       .sort({ noticeDeadline: -1, _id: -1 }).skip((page - 1) * 25).limit(26).toArray();
     response.json({
-      items: rows.slice(0, 25).map((item) => toResponse(item, request.session.userId)),
+      items: rows.slice(0, 25).map((item) => toResponse(item, request.session.userId, request.canReviewAll)),
       hasMore: page < 1000 && rows.length > 25,
     });
   });
@@ -73,22 +79,64 @@ export function renewalDecisionRoutes(database, requireSession) {
       seatsToReduce: action === 'reduce-seats' ? seatsToReduce : null,
       recordedBy: request.session.userId, recordedAt: new Date(),
     };
-    const updated = await subscriptions.findOneAndUpdate(filter, { $set: { renewalDecision: decision } }, {
+    const updated = await subscriptions.findOneAndUpdate(filter, { $set: { renewalDecision: decision }, $unset: { renewalExecution: '' } }, {
       projection: selectFields, returnDocument: 'after',
     });
     if (!updated) {
       return response.status(409).json({ message: 'This renewal, its owner, or its decision has changed. Refresh to see the latest record.' });
     }
-    response.json(toResponse(updated, request.session.userId));
+    response.json(toResponse(updated, request.session.userId, request.canReviewAll));
+  });
+
+  router.put('/:subscriptionId/execution', async (request, response) => {
+    if (!request.canReviewAll) {
+      return response.status(403).json({ message: 'Execution tracking requires Admin or Finance access.' });
+    }
+    const id = request.params.subscriptionId;
+    if (!objectIdPattern.test(id)) return response.status(404).json({ message: 'Renewal not found.' });
+    const { status, note: input, decisionRevision, executionRevision } = request.body ?? {};
+    const note = typeof input === 'string' ? input.trim() : '';
+    if (!['submitted', 'confirmed', 'reopened'].includes(status) || !note || note.length > 500 ||
+        /(?:\d[ -]?){12,}/.test(note) ||
+        typeof decisionRevision !== 'string' || !objectIdPattern.test(decisionRevision) ||
+        !(executionRevision === null || (typeof executionRevision === 'string' && objectIdPattern.test(executionRevision)))) {
+      return response.status(400).json({ message: 'Choose a status and enter a vendor reference or reopening reason.' });
+    }
+    const filter = {
+      _id: new ObjectId(id),
+      workspaceId: request.workspaceId,
+      noticeVerifiedAt: { $type: 'date' },
+      'renewalDecision.revision': decisionRevision,
+      'renewalExecution.revision': executionRevision,
+      $expr: { $eq: ['$noticeDeadline', '$renewalDecision.noticeDeadline'] },
+    };
+    const current = await subscriptions.findOne(filter, { projection: { renewalExecution: 1 } });
+    const conflict = () => response.status(409).json({ message: 'The renewal changed. Refresh and try again.' });
+    if (!current) return conflict();
+    if (!transitions[current.renewalExecution?.status ?? 'pending']?.includes(status)) {
+      return response.status(400).json({ message: 'This status change is not available.' });
+    }
+    const execution = {
+      status, note, decisionRevision, revision: new ObjectId().toHexString(),
+      recordedAt: new Date(), recordedBy: request.session.userId,
+    };
+    const updated = await subscriptions.findOneAndUpdate(filter, { $set: { renewalExecution: execution } }, {
+      projection: selectFields, returnDocument: 'after',
+    });
+    if (!updated) return conflict();
+    response.json(toResponse(updated, request.session.userId, true));
   });
 
   return router;
 }
 
-function toResponse({ _id, name, vendor, ownerId, noticeDeadline, renewalDecision }, userId) {
+function toResponse({ _id, name, vendor, ownerId, noticeDeadline, renewalDecision, renewalExecution }, userId, canReviewAll) {
+  const decision = renewalDecision?.noticeDeadline === noticeDeadline ? renewalDecision : null;
   return {
     id: _id.toHexString(), name, vendor, noticeDeadline,
     canDecide: ownerId.equals(userId),
-    decision: renewalDecision?.noticeDeadline === noticeDeadline ? renewalDecision : null,
+    decision,
+    canTrackExecution: canReviewAll && !!decision,
+    execution: decision && renewalExecution?.decisionRevision === decision.revision ? renewalExecution : null,
   };
 }

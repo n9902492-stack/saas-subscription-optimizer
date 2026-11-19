@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
+import RenewalExecutionForm, { executionLabels } from './renewal-execution-form';
 
 const labels = { keep: 'Keep', 'reduce-seats': 'Reduce seats', 'review-overlap': 'Review overlap', cancel: 'Cancel' };
 
@@ -11,6 +12,7 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
   const [refresh, setRefresh] = useState(0);
   const [snapshot, setSnapshot] = useState(null);
   const [selected, setSelected] = useState(null);
+  const [tracking, setTracking] = useState(null);
   const [action, setAction] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -31,7 +33,7 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
     ? snapshot : null;
   const active = selected && current?.data?.items.find((item) =>
     item.id === selected.id && item.canDecide && item.noticeDeadline === selected.noticeDeadline);
-  const reload = () => { setSelected(null); setError(''); setRefresh((value) => value + 1); };
+  const reload = () => { setTracking(null); setSelected(null); setError(''); setRefresh((value) => value + 1); };
 
   async function save(event) {
     event.preventDefault();
@@ -66,16 +68,22 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
           {current.data.items.length ? (
             <div className="statement-table">
               <table>
-                <thead><tr><th>Subscription</th><th>Notice deadline</th><th>Decision</th><th>Reason</th><th>Action</th></tr></thead>
+                <thead><tr><th>Subscription</th><th>Notice deadline</th><th>Decision</th><th>Reason</th><th>Execution</th><th>Action</th></tr></thead>
                 <tbody>{current.data.items.map((item) => (
                   <tr key={item.id}>
                     <th scope="row">{item.name} · {item.vendor}</th><td>{item.noticeDeadline}</td>
                     <td>{item.decision ? labels[item.decision.action] : 'Pending'}
                       {item.decision?.seatsToReduce && ` · ${item.decision.seatsToReduce}`}</td>
                     <td>{item.decision?.reason ?? '—'}</td>
-                    <td>{item.canDecide && <button type="button" className="secondary" disabled={saving} onClick={() => {
+                    <td>{item.decision ? executionLabels[item.execution?.status ?? 'pending'] : '—'}
+                      {item.execution?.note && <div>{item.execution.note}</div>}
+                    </td>
+                    <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {
                       setSelected(item); setAction(item.decision?.action ?? ''); setError('');
-                    }}>{item.decision ? 'Edit decision' : 'Record decision'}</button>}</td>
+                    }}>{item.decision ? 'Edit decision' : 'Record decision'}</button>}
+                      {item.canTrackExecution && <button type="button" className="secondary" disabled={saving || !!tracking}
+                        onClick={() => { setSelected(null); setTracking(item); }}>Track execution</button>}
+                    </td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -83,9 +91,13 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
           ) : <p>No verified renewals to review.</p>}
           {(page > 1 || current.data.hasMore) && (
             <div className="transaction-pagination">
-              <button type="button" disabled={saving || page === 1} onClick={() => { setSelected(null); setPage(page - 1); }}>Previous</button>
-              <button type="button" disabled={saving || !current.data.hasMore} onClick={() => { setSelected(null); setPage(page + 1); }}>Next</button>
+              <button type="button" disabled={saving || !!tracking || page === 1} onClick={() => { setSelected(null); setPage(page - 1); }}>Previous</button>
+              <button type="button" disabled={saving || !!tracking || !current.data.hasMore} onClick={() => { setSelected(null); setPage(page + 1); }}>Next</button>
             </div>
+          )}
+          {tracking && (
+            <RenewalExecutionForm key={tracking.id} item={tracking} endpoint={endpoint} token={token}
+              onClose={reload} onSaved={reload} />
           )}
           {active && (
             <form key={selected.id} onSubmit={save}>
