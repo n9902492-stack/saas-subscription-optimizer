@@ -13,8 +13,8 @@ async function request(path, { token, body, method = 'GET' } = {}) {
   return data;
 }
 
-export default function WorkspaceStart() {
-  const [mode, setMode] = useState('signup');
+export default function AccountWorkspaces({ initialMode }) {
+  const [mode, setMode] = useState(initialMode);
   const [token, setToken] = useState('');
   const [workspaces, setWorkspaces] = useState([]);
   const [error, setError] = useState('');

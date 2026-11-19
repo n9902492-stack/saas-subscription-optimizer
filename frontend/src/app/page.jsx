@@ -1,30 +1,29 @@
-import WorkspaceStart from '../features/workspaces/workspace-start';
-export const dynamic = 'force-dynamic';
+import Link from 'next/link';
 
-async function getReadiness() {
-  try {
-    const baseUrl = process.env.API_BASE_URL ?? 'http://127.0.0.1:4000';
-    const response = await fetch(new URL('/api/health', baseUrl), {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(6000),
-    });
-    return response.ok && (await response.json()).status === 'ready';
-  } catch {
-    return false;
-  }
-}
-
-export default async function HomePage() {
-  const ready = await getReadiness();
+export default function HomePage() {
   return (
-    <main>
-      <h1>SaaS Subscription Optimizer</h1>
-      <p>Track software spend, licenses, and renewal decisions.</p>
-      <dl>
-        <dt>API and database status</dt>
-        <dd>{ready ? 'Connected' : 'Unavailable. Check the API and MongoDB.'}</dd>
-      </dl>
-      <WorkspaceStart />
+    <main className="landing">
+      <header className="topbar">
+        <Link className="brand" href="/">SaaS Optimizer</Link>
+        <nav aria-label="Account">
+          <Link href="/sign-in">Sign in</Link>
+          <Link className="cta" href="/sign-up">Get started</Link>
+        </nav>
+      </header>
+      <div className="hero">
+        <div>
+          <h1>Know what to renew before it renews.</h1>
+          <p>Bring software spend, license activity, and renewal deadlines into one workspace for Finance and Engineering.</p>
+          <Link className="cta" href="/sign-up">Create a workspace</Link>
+        </div>
+        <figure>
+          <video controls playsInline preload="none" poster="/workflow-poster.jpg" aria-label="Silent product workflow preview">
+            <source src="/workflow-preview.mp4" type="video/mp4" />
+            Your browser does not support embedded video.
+          </video>
+          <figcaption>Product concept preview · Import spend, review seats, decide before renewal.</figcaption>
+        </figure>
+      </div>
     </main>
   );
 }

@@ -7,7 +7,7 @@ A Next.js frontend and an Express API backed by MongoDB.
 | Path | Responsibility |
 | --- | --- |
 | `frontend/src/app/layout.jsx` | Global Next.js layout and page metadata |
-| `frontend/src/app/page.jsx` | Starter page and server-side API readiness check |
+| `frontend/src/app/page.jsx` | Landing page and product concept video |
 | `frontend/src/app/styles.css` | Global layout and visual styles |
 | `backend/src/server.js` | Environment configuration, MongoDB startup and HTTP lifecycle |
 | `backend/src/app.js` | Express app and readiness endpoint |
@@ -36,7 +36,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The status card reports whether the API can reach MongoDB. The readiness endpoint is http://127.0.0.1:4000/api/health. The starter supports email sign-up, sign-in, and workspace creation. The creator is assigned Admin in the same MongoDB document. The browser keeps the session in memory, so refreshing requires signing in again.
+Open http://localhost:3000 for the landing page or http://localhost:3000/sign-in for account access. The readiness endpoint is http://127.0.0.1:4000/api/health. The starter supports email sign-up, sign-in, and workspace creation. The creator is assigned Admin in the same MongoDB document. The browser keeps the session in memory, so refreshing requires signing in again.
 
 ## Workspace milestone
 
@@ -47,3 +47,13 @@ Open http://localhost:3000. The status card reports whether the API can reach Mo
 | `backend/src/modules/auth/auth.js` | Password hashing, sign-in and session lifecycle |
 | `backend/src/modules/workspaces/workspace.routes.js` | Workspace routes and request validation |
 | `backend/src/modules/workspaces/workspace.repository.js` | Workspace persistence and membership-scoped reads |
+
+## Landing and account pages
+
+| Path | Responsibility |
+| --- | --- |
+| `frontend/src/app/page.jsx` | Landing page and silent product concept preview |
+| `frontend/src/app/sign-in/page.jsx` | Sign-in entry point |
+| `frontend/src/app/sign-up/page.jsx` | Sign-up entry point |
+| `frontend/src/features/workspaces/account-page.jsx` | Account layout and animated team workflow |
+| `frontend/public/workflow-preview.mp4` | Product concept video using illustrative data |
