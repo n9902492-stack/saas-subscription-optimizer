@@ -1,0 +1,20 @@
+body {
+  margin: 0;
+  background: #f0f5f4;
+  color: #132628;
+  font: 1rem/1.55 system-ui, sans-serif;
+}
+main {
+  max-width: 42rem;
+  margin: 10vh auto;
+  padding: 2rem;
+}
+h1 { line-height: 1.1; }
+dl {
+  background: white;
+  border: 1px solid #cbdad7;
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+}
+dt { font-weight: 700; }
+dd { margin: 0.25rem 0 0; }
