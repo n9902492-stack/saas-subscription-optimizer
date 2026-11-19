@@ -8,6 +8,7 @@ import { transactionRoutes } from './modules/transactions/transaction.routes.js'
 import { vendorRoutes } from './modules/vendors/vendor.routes.js';
 import { subscriptionRoutes } from './modules/subscriptions/subscription.routes.js';
 import { renewalRoutes } from './modules/renewals/renewal.routes.js';
+import { renewalDecisionRoutes } from './modules/renewals/renewal-decision.routes.js';
 import { paymentSourceRoutes } from './modules/payment-sources/payment-source.routes.js';
 
 export async function createApp(database) {
@@ -31,6 +32,7 @@ export async function createApp(database) {
   app.use('/api/workspaces/:workspaceId/vendors', vendorRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/subscriptions', await subscriptionRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/renewals', await renewalRoutes(database, auth.requireSession));
+  app.use('/api/workspaces/:workspaceId/renewal-decisions', renewalDecisionRoutes(database, auth.requireSession));
   app.use('/api/workspaces', workspaceRoutes(workspaceRepository(database), auth.requireSession));
   app.use('/api/workspaces/:workspaceId/payment-sources', await paymentSourceRoutes(database, auth.requireSession));
 

@@ -59,7 +59,14 @@ export async function subscriptionRoutes(database, requireSession) {
     if (!record) return;
     const updated = await subscriptions.findOneAndUpdate(
       { _id: id, workspaceId: request.workspaceId },
-      { $set: { ...record, updatedAt: new Date(), updatedBy: request.session.userId } },
+      [{ $set: {
+        renewalDecision: {
+          $cond: [{ $eq: ['$noticeDeadline', record.noticeDeadline] }, '$renewalDecision', '$$REMOVE'],
+        },
+        ...Object.fromEntries(Object.entries(record).map(([key, value]) => [key, { $literal: value }])),
+        updatedAt: '$$NOW',
+        updatedBy: request.session.userId,
+      } }],
       { returnDocument: 'after' },
     );
     if (!updated) return response.status(404).json({ message: 'Subscription not found.' });

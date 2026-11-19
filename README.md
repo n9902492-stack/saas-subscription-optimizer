@@ -121,3 +121,7 @@ Admin and Finance can browse the month-by-month calendar and review the next 30 
 ### Renewal reminders
 
 The workspace dashboard derives in-app reminders from current verified notice deadlines, at 30 and 7 calendar days before notice is due. The list uses UTC, shows targets up to 30 days ahead, and retains elapsed milestones while their notice window is still open. Editing or clearing a deadline updates the list on the next refresh. This milestone does not send emails or run a background delivery worker.
+
+### Renewal decisions
+
+For a verified notice deadline, the assigned owner can record Keep, Reduce seats, Review overlap, or Cancel with a reason. Reduce seats also requires a proposed seat count. Admin and Finance can review all decisions in their workspace. Other members only see renewals assigned to them. Changing the notice date clears the prior current decision. Cancel records a decision for follow-up with the vendor. Decision history and external execution tracking are future work.
