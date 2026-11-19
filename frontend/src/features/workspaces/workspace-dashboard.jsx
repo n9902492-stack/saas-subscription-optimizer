@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { request } from './api-client';
 import StatementImport from '../imports/statement-import';
 import TransactionList from '../transactions/transaction-list';
+import VendorInventory from '../vendors/vendor-inventory';
 
 export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const endpoint = `/api/workspaces/${workspace.id}/payment-sources`;
@@ -14,6 +15,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const [refresh, setRefresh] = useState(0);
   const [saving, setSaving] = useState(false);
   const [importVersion, setImportVersion] = useState(0);
+  const [matchVersion, setMatchVersion] = useState(0);
 
   useEffect(() => {
     if (!canManageSources) return;
@@ -82,7 +84,8 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
           )}
         </div>
       )}
-      {canManageSources && <TransactionList workspaceId={workspace.id} token={token} importVersion={importVersion} />}
+      {canManageSources && <TransactionList workspaceId={workspace.id} token={token} importVersion={importVersion} onMatched={() => setMatchVersion((value) => value + 1)} />}
+      {canManageSources && <VendorInventory workspaceId={workspace.id} token={token} revision={importVersion + matchVersion} />}
     </div>
   );
 }

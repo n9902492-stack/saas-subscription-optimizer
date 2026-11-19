@@ -1,8 +1,8 @@
 import { Router } from 'express';
 import { financeAccess } from '../workspaces/finance-access.js';
+import { merchantKey } from './merchant-key.js';
 
 const pageSize = 25;
-const merchantKey = (value) => value.trim().replace(/\s+/g, ' ').toLowerCase();
 
 export async function transactionRoutes(database, requireSession) {
   const router = Router({ mergeParams: true });

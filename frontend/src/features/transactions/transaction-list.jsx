@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
 
-export default function TransactionList({ workspaceId, token, importVersion }) {
+export default function TransactionList({ workspaceId, token, importVersion, onMatched }) {
   const endpoint = `/api/workspaces/${workspaceId}/transactions`;
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
@@ -38,6 +38,7 @@ export default function TransactionList({ workspaceId, token, importVersion }) {
         token, method: 'PUT', body: { merchant: selected.merchant, vendor },
       });
       setSelected(null);
+      onMatched();
       setLoadError('');
       setRefresh((value) => value + 1);
     } catch (failure) {

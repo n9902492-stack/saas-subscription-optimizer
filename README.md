@@ -83,9 +83,19 @@ Admin and Finance can upload a UTF-8 CSV (128 KiB or 1,000 transactions maximum)
 
 ## Saved transactions and merchant matching
 
-Admin and Finance can review saved transactions in date order and match a statement merchant to a vendor name. The workspace stores one match per normalized merchant description. Editing a match updates the vendor displayed across that workspace while preserving original statement data. For example, matching both GITHUB and GITHUB.COM to GitHub requires one match for each description. Vendor names in this milestone are labels. A formal vendor catalog and totals are downstream work.
+Admin and Finance can review saved transactions in date order and match a statement merchant to a vendor name. The workspace stores one match per normalized merchant description. Editing a match updates the vendor displayed across that workspace while preserving original statement data. For example, matching both GITHUB and GITHUB.COM to GitHub requires one match for each description. Vendor names in this milestone are labels. The vendor inventory groups matching labels for spend reporting.
 
 | Path | Responsibility |
 | --- | --- |
 | `backend/src/modules/transactions/transaction.routes.js` | Scoped transaction list and merchant matching |
 | `frontend/src/features/transactions/transaction-list.jsx` | Transaction table, pagination and match form |
+
+## Vendor inventory
+
+Admin and Finance see all saved net spend, unmatched net spend, and per-vendor spend by original currency. Negative amounts reduce net spend. Vendor names with equivalent casing and whitespace group together. The inventory refreshes after CSV imports and merchant remapping.
+
+| Path | Responsibility |
+| --- | --- |
+| `backend/src/modules/vendors/vendor.routes.js` | Workspace-scoped vendor grouping and exact native-currency totals |
+| `frontend/src/features/vendors/vendor-inventory.jsx` | Vendor inventory and total and unmatched spend views |
+| `backend/src/modules/transactions/merchant-key.js` | Shared normalization for merchant matching and reporting |
