@@ -5,6 +5,7 @@ import { request } from './api-client';
 import StatementImport from '../imports/statement-import';
 import TransactionList from '../transactions/transaction-list';
 import VendorInventory from '../vendors/vendor-inventory';
+import Subscriptions from '../subscriptions/subscriptions';
 
 export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const endpoint = `/api/workspaces/${workspace.id}/payment-sources`;
@@ -86,6 +87,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
       )}
       {canManageSources && <TransactionList workspaceId={workspace.id} token={token} importVersion={importVersion} onMatched={() => setMatchVersion((value) => value + 1)} />}
       {canManageSources && <VendorInventory workspaceId={workspace.id} token={token} revision={importVersion + matchVersion} />}
+      {canManageSources && <Subscriptions workspaceId={workspace.id} token={token} vendorRevision={matchVersion} />}
     </div>
   );
 }

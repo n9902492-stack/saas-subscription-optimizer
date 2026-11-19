@@ -6,6 +6,7 @@ import { workspaceRoutes } from './modules/workspaces/workspace.routes.js';
 import { statementImportRoutes } from './modules/imports/statement-import.routes.js';
 import { transactionRoutes } from './modules/transactions/transaction.routes.js';
 import { vendorRoutes } from './modules/vendors/vendor.routes.js';
+import { subscriptionRoutes } from './modules/subscriptions/subscription.routes.js';
 import { paymentSourceRoutes } from './modules/payment-sources/payment-source.routes.js';
 
 export async function createApp(database) {
@@ -27,6 +28,7 @@ export async function createApp(database) {
   app.post('/api/auth/signout', auth.requireSession, auth.signout);
   app.use('/api/workspaces/:workspaceId/transactions', await transactionRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/vendors', vendorRoutes(database, auth.requireSession));
+  app.use('/api/workspaces/:workspaceId/subscriptions', await subscriptionRoutes(database, auth.requireSession));
   app.use('/api/workspaces', workspaceRoutes(workspaceRepository(database), auth.requireSession));
   app.use('/api/workspaces/:workspaceId/payment-sources', await paymentSourceRoutes(database, auth.requireSession));
 

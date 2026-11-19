@@ -99,3 +99,12 @@ Admin and Finance see all saved net spend, unmatched net spend, and per-vendor s
 | `backend/src/modules/vendors/vendor.routes.js` | Workspace-scoped vendor grouping and exact native-currency totals |
 | `frontend/src/features/vendors/vendor-inventory.jsx` | Vendor inventory and total and unmatched spend views |
 | `backend/src/modules/transactions/merchant-key.js` | Shared normalization for merchant matching and reporting |
+
+## Subscriptions and contract terms
+
+Admin and Finance can create or edit subscription records for a matched vendor or a manually entered vendor name. A workspace member must own each record. Billing cycle, auto-renew status, contract end and notice deadline are separate fields. A notice deadline requires evidence and explicit confirmation. The app stores who verified it and when. Editing a verified record requires reconfirming the notice if a deadline remains on the form.
+
+| Path | Responsibility |
+| --- | --- |
+| `backend/src/modules/subscriptions/subscription.routes.js` | Workspace-scoped records, membership checks and notice validation |
+| `frontend/src/features/subscriptions/subscriptions.jsx` | Subscription list and contract form |
