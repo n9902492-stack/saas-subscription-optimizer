@@ -18,6 +18,7 @@ export async function createApp(database) {
   await auth.initialize();
   app.use('/api/workspaces/:workspaceId/statement-imports', express.json({ limit: '800kb' }),
     await statementImportRoutes(database, auth.requireSession));
+  app.put('/api/workspaces/:workspaceId/subscriptions/:subscriptionId/seats', express.json({ limit: '800kb' }));
   app.use(express.json({ limit: '8kb' }));
 
   const authLimiter = rateLimit({
@@ -30,9 +31,10 @@ export async function createApp(database) {
   app.post('/api/auth/signout', auth.requireSession, auth.signout);
   app.use('/api/workspaces/:workspaceId/transactions', await transactionRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/vendors', vendorRoutes(database, auth.requireSession));
-  app.use('/api/workspaces/:workspaceId/subscriptions', await subscriptionRoutes(database, auth.requireSession));
+
   app.use('/api/workspaces/:workspaceId/renewals', await renewalRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/renewal-decisions', renewalDecisionRoutes(database, auth.requireSession));
+  app.use('/api/workspaces/:workspaceId/subscriptions', await subscriptionRoutes(database, auth.requireSession));
   app.use('/api/workspaces', workspaceRoutes(workspaceRepository(database), auth.requireSession));
   app.use('/api/workspaces/:workspaceId/payment-sources', await paymentSourceRoutes(database, auth.requireSession));
 

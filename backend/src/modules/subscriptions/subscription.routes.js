@@ -1,3 +1,4 @@
+import { subscriptionSeatRoutes } from './subscription-seat.routes.js';
 import { Router } from 'express';
 import { ObjectId } from 'mongodb';
 import { financeAccess } from '../workspaces/finance-access.js';
@@ -14,6 +15,7 @@ export async function subscriptionRoutes(database, requireSession) {
   const aliases = database.collection('merchantAliases');
   await subscriptions.createIndex({ workspaceId: 1, contractEnd: 1, _id: 1 });
   router.use(requireSession, financeAccess(database));
+  router.use(subscriptionSeatRoutes(subscriptions));
 
   async function members(workspaceId) {
     const workspace = await workspaces.findOne({ _id: workspaceId }, { projection: { members: 1 } });
@@ -30,7 +32,7 @@ export async function subscriptionRoutes(database, requireSession) {
       return response.status(400).json({ message: 'Choose a page from 1 to 1,000.' });
     }
     const [items, owners, vendorLabels] = await Promise.all([
-      subscriptions.find({ workspaceId }).sort({ contractEnd: 1, _id: 1 }).skip((page - 1) * 25).limit(26).toArray(),
+      subscriptions.find({ workspaceId }, { projection: { seatSnapshot: 0, renewalHistory: 0 } }).sort({ contractEnd: 1, _id: 1 }).skip((page - 1) * 25).limit(26).toArray(),
       members(workspaceId),
       aliases.distinct('vendor', { workspaceId }),
     ]);

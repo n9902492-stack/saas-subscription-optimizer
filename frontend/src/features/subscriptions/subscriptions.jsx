@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import SubscriptionSeats from './subscription-seats';
 import { request } from '../workspaces/api-client';
 
 export default function Subscriptions({ workspaceId, token, vendorRevision, onSaved }) {
@@ -9,6 +10,7 @@ export default function Subscriptions({ workspaceId, token, vendorRevision, onSa
   const [page, setPage] = useState(1);
   const [revision, setRevision] = useState(0);
   const [editing, setEditing] = useState(null);
+  const [reviewing, setReviewing] = useState(null);
   const [loadError, setLoadError] = useState('');
   const [saveError, setSaveError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -60,6 +62,7 @@ export default function Subscriptions({ workspaceId, token, vendorRevision, onSa
         <>
           <button type="button" disabled={saving} onClick={() => {
             setSaveError('');
+            setReviewing(null);
             setEditing({});
           }}>Add subscription</button>
           {data.items.length ? (
@@ -75,8 +78,13 @@ export default function Subscriptions({ workspaceId, token, vendorRevision, onSa
                     <td>{item.noticeDeadline ? `${item.noticeDeadline} · Verified` : 'Unverified'}</td>
                     <td><button type="button" className="secondary" disabled={saving} onClick={() => {
                       setSaveError('');
+                      setReviewing(null);
                       setEditing(item);
-                    }}>Edit</button></td>
+                    }}>Edit</button>
+                      <button type="button" className="secondary" disabled={saving} onClick={() => {
+                        setEditing(null); setReviewing(item);
+                      }}>Review seats</button>
+                    </td>
                   </tr>
                 ))}</tbody>
               </table>
@@ -88,6 +96,8 @@ export default function Subscriptions({ workspaceId, token, vendorRevision, onSa
               <button disabled={!data.hasMore || saving} onClick={() => { setData(null); setPage(page + 1); }}>Next</button>
             </div>
           )}
+          {reviewing && <SubscriptionSeats key={reviewing.id} endpoint={endpoint} item={reviewing}
+            token={token} onClose={() => setReviewing(null)} />}
           {editing && (
             <form key={editing.id ?? 'new'} onSubmit={save}>
               <label>Vendor

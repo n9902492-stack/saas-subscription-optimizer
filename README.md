@@ -133,3 +133,7 @@ Admin and Finance can record vendor follow-up as Submitted, Confirmed, or Reopen
 ### Renewal audit history
 
 Admin and Finance can open View history for a verified renewal. Each successful decision or execution update records its actor, timestamp, notice deadline, and entered reason or reference. Execution entries include the previous status. The current update and its history entry are saved together. The most recent 100 updates per subscription are retained across notice deadline edits. Earlier updates are not backfilled.
+
+### CSV license seat review
+
+In Subscriptions and contracts, choose Review seats. Admin and Finance can replace the latest per-subscription seat snapshot with a UTF-8 CSV of 1–1,000 assigned seats. Use account and last_activity headers, one account per row, and YYYY-MM-DD dates. Blank activity remains Unknown. Reported activity 60 or more days before the snapshot date marks a candidate for review. Enter purchased seats to see unassigned seats or a purchasing discrepancy. The system stores normalized rows and import metadata. Live provider sync is separate.
