@@ -53,5 +53,57 @@ export async function renewalRoutes(database, requireSession) {
     response.json({ month, today, upcomingThrough, calendar, upcoming, overdueCount, unverifiedCount });
   });
 
+  router.get('/reminders', async (request, response) => {
+    response.set('Cache-Control', 'no-store');
+    const today = dateKey(new Date());
+    const windowDays = 30;
+    const milestones = [30, 7];
+    const shift = (date, days) => dateKey(new Date(Date.parse(date) + days * dayMs));
+    const entries = await subscriptions.aggregate([
+      { $match: {
+        workspaceId: request.workspaceId,
+        noticeVerifiedAt: { $type: 'date' },
+        noticeDeadline: { $gte: today, $lte: shift(today, windowDays + 30) },
+      } },
+      { $project: { name: 1, vendor: 1, ownerId: 1, noticeDeadline: 1,
+        daysUntilDeadline: { $dateDiff: {
+          startDate: new Date(today), endDate: { $dateFromString: { dateString: '$noticeDeadline' } }, unit: 'day',
+        } },
+      } },
+      { $set: { daysBefore: milestones } },
+      { $unwind: '$daysBefore' },
+      { $set: { daysUntilReminder: { $subtract: ['$daysUntilDeadline', '$daysBefore'] } } },
+      { $match: { daysUntilReminder: { $lte: windowDays } } },
+      { $sort: { daysUntilReminder: 1, noticeDeadline: 1, _id: 1, daysBefore: -1 } },
+      { $limit: 201 },
+    ]).toArray();
+
+    const workspace = await database.collection('workspaces').findOne(
+      { _id: request.workspaceId }, { projection: { members: 1 } },
+    );
+    const members = new Set((workspace?.members ?? []).map(({ userId }) => userId.toHexString()));
+    const ownerIds = entries.filter(({ ownerId }) => members.has(ownerId.toHexString())).map(({ ownerId }) => ownerId);
+    const owners = await database.collection('users').find(
+      { _id: { $in: ownerIds } }, { projection: { email: 1 } },
+    ).toArray();
+    const labels = new Map(owners.map(({ _id, email }) => [_id.toHexString(), email]));
+
+    response.json({
+      today,
+      upcomingThrough: shift(today, windowDays),
+      truncated: entries.length > 200,
+      items: entries.slice(0, 200).map((item) => ({
+        id: `${item._id}:${item.daysBefore}`,
+        name: item.name,
+        vendor: item.vendor,
+        owner: labels.get(item.ownerId.toHexString()) ?? null,
+        noticeDeadline: item.noticeDeadline,
+        reminderDate: shift(item.noticeDeadline, -item.daysBefore),
+        daysBefore: item.daysBefore,
+        status: item.daysUntilReminder < 0 ? 'elapsed' : item.daysUntilReminder === 0 ? 'due' : 'scheduled',
+      })),
+    });
+  });
+
   return router;
 }

@@ -7,6 +7,7 @@ import TransactionList from '../transactions/transaction-list';
 import VendorInventory from '../vendors/vendor-inventory';
 import Subscriptions from '../subscriptions/subscriptions';
 import RenewalCalendar from '../renewals/renewal-calendar';
+import RenewalReminders from '../renewals/renewal-reminders';
 
 export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const endpoint = `/api/workspaces/${workspace.id}/payment-sources`;
@@ -91,6 +92,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
       {canManageSources && <VendorInventory workspaceId={workspace.id} token={token} revision={importVersion + matchVersion} />}
       {canManageSources && <Subscriptions workspaceId={workspace.id} token={token} vendorRevision={matchVersion} onSaved={() => setSubscriptionVersion((value) => value + 1)} />}
       {canManageSources && <RenewalCalendar workspaceId={workspace.id} token={token} revision={subscriptionVersion} />}
+      {canManageSources && <RenewalReminders workspaceId={workspace.id} token={token} revision={subscriptionVersion} />}
     </div>
   );
 }
