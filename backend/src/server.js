@@ -7,9 +7,11 @@ if (!uri || !Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('Set MONGODB_URI and a valid PORT in backend/.env.');
 }
 
+let client;
 try {
-  const client = await connectDatabase(uri);
-  const server = createApp(client.db()).listen(port, '127.0.0.1', () => {
+  client = await connectDatabase(uri);
+  const app = await createApp(client.db());
+  const server = app.listen(port, '127.0.0.1', () => {
     console.log(`API listening at http://127.0.0.1:${port}`);
   });
   server.on('error', async () => {
@@ -21,6 +23,7 @@ try {
     process.once(signal, () => server.close(() => void client.close()));
   }
 } catch {
-  console.error('MongoDB connection failed. Check MONGODB_URI and database availability.');
+  await client?.close();
+  console.error('API startup failed. Check MongoDB availability and database permissions.');
   process.exitCode = 1;
 }

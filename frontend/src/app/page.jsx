@@ -1,3 +1,4 @@
+import WorkspaceStart from '../features/workspaces/workspace-start';
 export const dynamic = 'force-dynamic';
 
 async function getReadiness() {
@@ -23,6 +24,7 @@ export default async function HomePage() {
         <dt>API and database status</dt>
         <dd>{ready ? 'Connected' : 'Unavailable. Check the API and MongoDB.'}</dd>
       </dl>
+      <WorkspaceStart />
     </main>
   );
 }

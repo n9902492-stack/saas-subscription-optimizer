@@ -36,4 +36,14 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. The status card reports whether the API can reach MongoDB. The readiness endpoint is http://127.0.0.1:4000/api/health. This commit establishes connectivity. Workspace creation, sign-in and permissions are the first product milestone.
+Open http://localhost:3000. The status card reports whether the API can reach MongoDB. The readiness endpoint is http://127.0.0.1:4000/api/health. The starter supports email sign-up, sign-in, and workspace creation. The creator is assigned Admin in the same MongoDB document. The browser keeps the session in memory, so refreshing requires signing in again.
+
+## Workspace milestone
+
+| Path | Responsibility |
+| --- | --- |
+| `frontend/next.config.mjs` | Proxies same-origin API requests to Express |
+| `frontend/src/features/workspaces/workspace-start.jsx` | Account and workspace setup UI |
+| `backend/src/modules/auth/auth.js` | Password hashing, sign-in and session lifecycle |
+| `backend/src/modules/workspaces/workspace.routes.js` | Workspace routes and request validation |
+| `backend/src/modules/workspaces/workspace.repository.js` | Workspace persistence and membership-scoped reads |
