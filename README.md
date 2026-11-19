@@ -80,3 +80,12 @@ Admin and Finance can upload a UTF-8 CSV (128 KiB or 1,000 transactions maximum)
 | `backend/src/modules/imports/statement-import.routes.js` | Scoped API and atomic batch persistence |
 | `backend/src/modules/imports/statement-import.service.js` | CSV parsing, validation, normalization and duplicate fingerprint |
 | `backend/src/modules/workspaces/finance-access.js` | Shared Admin and Finance authorization for workspace data |
+
+## Saved transactions and merchant matching
+
+Admin and Finance can review saved transactions in date order and match a statement merchant to a vendor name. The workspace stores one match per normalized merchant description. Editing a match updates the vendor displayed across that workspace while preserving original statement data. For example, matching both GITHUB and GITHUB.COM to GitHub requires one match for each description. Vendor names in this milestone are labels. A formal vendor catalog and totals are downstream work.
+
+| Path | Responsibility |
+| --- | --- |
+| `backend/src/modules/transactions/transaction.routes.js` | Scoped transaction list and merchant matching |
+| `frontend/src/features/transactions/transaction-list.jsx` | Transaction table, pagination and match form |

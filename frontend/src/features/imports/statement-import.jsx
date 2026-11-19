@@ -8,7 +8,7 @@ const fields = [
   ['amount', 'Signed amount'], ['currency', 'Currency'],
 ];
 
-export default function StatementImport({ workspaceId, sources, token }) {
+export default function StatementImport({ workspaceId, sources, token, onSaved }) {
   const [csv, setCsv] = useState('');
   const [columns, setColumns] = useState([]);
   const [mapping, setMapping] = useState({});
@@ -65,6 +65,7 @@ export default function StatementImport({ workspaceId, sources, token }) {
         token, method: 'POST', body: { csv, mapping, paymentSourceId: source, previewHash: preview.hash },
       });
       setResult(data);
+      onSaved();
     });
   }
 

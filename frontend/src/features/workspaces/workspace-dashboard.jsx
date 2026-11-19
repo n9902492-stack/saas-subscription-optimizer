@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { request } from './api-client';
 import StatementImport from '../imports/statement-import';
+import TransactionList from '../transactions/transaction-list';
 
 export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const endpoint = `/api/workspaces/${workspace.id}/payment-sources`;
@@ -12,6 +13,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
   const [saveError, setSaveError] = useState('');
   const [refresh, setRefresh] = useState(0);
   const [saving, setSaving] = useState(false);
+  const [importVersion, setImportVersion] = useState(0);
 
   useEffect(() => {
     if (!canManageSources) return;
@@ -75,11 +77,12 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
                 <button disabled={saving}>{saving ? 'Adding…' : 'Add payment source'}</button>
               </form>
               {saveError && <p role="alert">{saveError}</p>}
-              {sources.length > 0 && <StatementImport workspaceId={workspace.id} sources={sources} token={token} />}
+              {sources.length > 0 && <StatementImport workspaceId={workspace.id} sources={sources} token={token} onSaved={() => setImportVersion((value) => value + 1)} />}
             </>
           )}
         </div>
       )}
+      {canManageSources && <TransactionList workspaceId={workspace.id} token={token} importVersion={importVersion} />}
     </div>
   );
 }
