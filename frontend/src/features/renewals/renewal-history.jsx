@@ -36,6 +36,9 @@ export default function RenewalHistory({ item, endpoint, token, decisionLabels, 
             <strong>{event.type === 'decision' ? decisionLabels[event.action] :
               `${executionLabels[event.previousStatus]} → ${executionLabels[event.status]}`}</strong>
             {event.seatsToReduce && ` · ${event.seatsToReduce} seats`}
+            {event.estimate && <div>Estimated {event.estimate.currency} {event.estimate.amount} per {event.estimate.period} from {event.estimate.effectiveDate}.
+              {' '}{event.estimate.billableReduction} billable seats at {event.estimate.rate} each
+              {' '}({event.estimate.committedSeats} committed, {event.estimate.minimumSeats} minimum).</div>}
             <div>{event.actor} · {dateFormat.format(new Date(event.recordedAt))}</div>
             <div>Notice deadline {event.noticeDeadline}</div>
             <div>{event.reason ?? event.note}</div>

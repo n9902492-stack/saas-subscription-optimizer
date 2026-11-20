@@ -1,3 +1,4 @@
+import { estimateSeatSavings } from './seat-savings.js';
 import { Router } from 'express';
 import { ObjectId } from 'mongodb';
 
@@ -102,6 +103,11 @@ export function renewalDecisionRoutes(database, requireSession) {
       seatsToReduce: action === 'reduce-seats' ? seatsToReduce : null,
       recordedBy: request.session.userId, recordedAt: new Date(),
     };
+    if (request.body.contractTerms != null) {
+      const estimate = action === 'reduce-seats' && estimateSeatSavings(request.body.contractTerms, seatsToReduce);
+      if (!estimate) return response.status(400).json({ message: 'Check the contract terms. Committed seats must cover the reduction and minimum. Enter a valid currency, rate and effective date.' });
+      decision.estimate = estimate;
+    }
     const updated = await subscriptions.findOneAndUpdate(filter, {
       $set: { renewalDecision: decision },
       $unset: { renewalExecution: '' },

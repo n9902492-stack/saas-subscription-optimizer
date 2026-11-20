@@ -16,6 +16,7 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
   const [tracking, setTracking] = useState(null);
   const [history, setHistory] = useState(null);
   const [action, setAction] = useState('');
+  const [includeTerms, setIncludeTerms] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -49,6 +50,11 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
         body: {
           action: fields.get('action'), reason: fields.get('reason'),
           noticeDeadline: selected.noticeDeadline, expectedRevision: selected.decision?.revision ?? null,
+          contractTerms: action === 'reduce-seats' && includeTerms ? {
+            committedSeats: Number(fields.get('committedSeats')), minimumSeats: Number(fields.get('minimumSeats')),
+            rate: fields.get('rate'), currency: fields.get('currency').trim().toUpperCase(),
+            period: fields.get('period'), effectiveDate: fields.get('effectiveDate'),
+          } : null,
           seatsToReduce: action === 'reduce-seats' ? Number(fields.get('seatsToReduce')) : null,
         },
       });
@@ -75,13 +81,16 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
                   <tr key={item.id}>
                     <th scope="row">{item.name} · {item.vendor}</th><td>{item.noticeDeadline}</td>
                     <td>{item.decision ? labels[item.decision.action] : 'Pending'}
-                      {item.decision?.seatsToReduce && ` · ${item.decision.seatsToReduce}`}</td>
+                      {item.decision?.seatsToReduce && ` · ${item.decision.seatsToReduce}`}
+                      {item.decision?.action === 'reduce-seats' && <div>{item.decision.estimate
+                        ? `Estimated savings: ${item.decision.estimate.currency} ${item.decision.estimate.amount} per ${item.decision.estimate.period} from ${item.decision.estimate.effectiveDate}`
+                        : 'Savings not estimated'}</div>}</td>
                     <td>{item.decision?.reason ?? '—'}</td>
                     <td>{item.decision ? executionLabels[item.execution?.status ?? 'pending'] : '—'}
                       {item.execution?.note && <div>{item.execution.note}</div>}
                     </td>
                     <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {
-                      setSelected(item); setAction(item.decision?.action ?? ''); setError('');
+                      setSelected(item); setIncludeTerms(!!item.decision?.estimate); setAction(item.decision?.action ?? ''); setError('');
                     }}>{item.decision ? 'Edit decision' : 'Record decision'}</button>}
                       {item.canTrackExecution && <button type="button" className="secondary" disabled={saving || !!tracking}
                         onClick={() => { setSelected(null); setHistory(null); setTracking(item); }}>Track execution</button>}
@@ -116,6 +125,19 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
               </label>
               {action === 'reduce-seats' && <label>Seats to reduce<input name="seatsToReduce" type="number" min={1} step={1}
                 defaultValue={selected.decision?.seatsToReduce ?? ''} required /></label>}
+              {action === 'reduce-seats' && <>
+                <label><input type="checkbox" checked={includeTerms} onChange={e => setIncludeTerms(e.target.checked)} /> Estimate savings from a fixed per-seat contract</label>
+                {includeTerms && <fieldset><legend>Contract terms before reduction</legend>
+                  <label>Committed seats<input type="number" name="committedSeats" min="1" defaultValue={selected.decision?.estimate?.committedSeats} required /></label>
+                  <label>Minimum payable seats<input type="number" name="minimumSeats" min="0" defaultValue={selected.decision?.estimate?.minimumSeats} required /></label>
+                  <label>Price per seat per billing period<input name="rate" inputMode="decimal" defaultValue={selected.decision?.estimate?.rate} required /></label>
+                  <label>Currency code<input name="currency" placeholder="USD" maxLength="3" defaultValue={selected.decision?.estimate?.currency} required /></label>
+                  <label>Billing period<select name="period" defaultValue={selected.decision?.estimate?.period ?? ''} required>
+                    <option value="">Select period</option><option value="month">Monthly</option><option value="quarter">Quarterly</option><option value="year">Annual</option>
+                  </select></label>
+                  <label>Reduction effective date<input type="date" name="effectiveDate" defaultValue={selected.decision?.estimate?.effectiveDate} required /></label>
+                </fieldset>}
+              </>}
               <label>Reason<textarea name="reason" defaultValue={selected.decision?.reason ?? ''} maxLength={500} required /></label>
               <button disabled={saving}>{saving ? 'Saving…' : 'Save decision'}</button>
               <button type="button" className="secondary" disabled={saving} onClick={reload}>Close and refresh</button>
