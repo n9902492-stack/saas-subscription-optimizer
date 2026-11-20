@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { downloadSavingsSummary } from './export-savings.mjs';
 import { request } from '../workspaces/api-client';
 
 export default function SavingsSummary({ endpoint, token }) {
@@ -19,6 +20,8 @@ export default function SavingsSummary({ endpoint, token }) {
     <p>Current seat reductions across this workspace. The difference compares reviewed invoices with their original estimates.</p>
     {!result ? <p role="status">Loading savings…</p> : result.error ? <div role="alert">{result.error}
       <button onClick={() => { setResult(null); setAttempt(value => value + 1); }}>Retry</button></div> : <>
+      {(result.data.groups.length > 0 || result.data.missingEstimate > 0) &&
+        <button type="button" className="secondary" onClick={() => downloadSavingsSummary(result.data)}>Export savings CSV</button>}
       {result.data.groups.length ? <div className="statement-table"><table>
         <thead><tr>{['Currency / billing period', 'Estimated savings', 'Invoices reviewed', 'Invoice savings', 'Difference'].map(label => <th key={label}>{label}</th>)}</tr></thead>
         <tbody>{result.data.groups.map(group => <tr key={group.currency + group.period}>
