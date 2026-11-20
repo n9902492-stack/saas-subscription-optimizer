@@ -10,6 +10,7 @@ const labels = { keep: 'Keep', 'reduce-seats': 'Reduce seats', 'review-overlap':
 
 export default function RenewalDecisions({ workspaceId, token, revision, showSavings }) {
   const endpoint = `/api/workspaces/${workspaceId}/renewal-decisions`;
+  const [view, setView] = useState('all');
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
   const [snapshot, setSnapshot] = useState(null);
@@ -23,17 +24,17 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
 
   useEffect(() => {
     const controller = new AbortController();
-    request(`${endpoint}?page=${page}`, { token, signal: controller.signal })
+    request(`${endpoint}?page=${page}&view=${view}`, { token, signal: controller.signal })
       .then((data) => {
-        if (!controller.signal.aborted) setSnapshot({ data, page, revision, refresh });
+        if (!controller.signal.aborted) setSnapshot({ data, page, view, revision, refresh });
       })
       .catch((failure) => {
-        if (!controller.signal.aborted) setSnapshot({ error: failure.message, page, revision, refresh });
+        if (!controller.signal.aborted) setSnapshot({ error: failure.message, page, view, revision, refresh });
       });
     return () => controller.abort();
-  }, [endpoint, token, page, revision, refresh]);
+  }, [endpoint, token, page, view, revision, refresh]);
 
-  const current = snapshot?.page === page && snapshot.revision === revision && snapshot.refresh === refresh
+  const current = snapshot?.page === page && snapshot.view === view && snapshot.revision === revision && snapshot.refresh === refresh
     ? snapshot : null;
   const active = selected && current?.data?.items.find((item) =>
     item.id === selected.id && item.canDecide && item.noticeDeadline === selected.noticeDeadline);
@@ -71,6 +72,18 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
     <section className="payment-panel">
       {showSavings && <SavingsSummary key={JSON.stringify([endpoint, revision, refresh])} endpoint={endpoint} token={token} />}
       <h3>Renewal decisions</h3>
+      {showSavings && <label>Show renewals
+        <select value={view} disabled={saving || !!tracking} onChange={event => {
+          setView(event.target.value);
+          setPage(1);
+          setSelected(null);
+          setHistory(null);
+          setError('');
+        }}>
+          <option value="all">All verified renewals</option>
+          <option value="awaiting-invoice">Awaiting invoice review</option>
+        </select>
+      </label>}
       {!current ? <p role="status">Loading renewal decisions…</p> : current.error ? (
         <div role="alert"><p>{current.error}</p><button type="button" onClick={reload}>Retry</button></div>
       ) : (
@@ -104,7 +117,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                 ))}</tbody>
               </table>
             </div>
-          ) : <p>No verified renewals to review.</p>}
+          ) : <p>{view === 'awaiting-invoice' ? 'No renewals awaiting invoice review on this page.' : 'No verified renewals to review.'}</p>}
           {(page > 1 || current.data.hasMore) && (
             <div className="transaction-pagination">
               <button type="button" disabled={saving || !!tracking || page === 1} onClick={() => { setSelected(null); setHistory(null); setPage(page - 1); }}>Previous</button>

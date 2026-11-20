@@ -47,6 +47,23 @@ export function renewalDecisionRoutes(database, requireSession) {
       noticeVerifiedAt: { $type: 'date' },
       ...(request.canReviewAll ? {} : { ownerId: request.session.userId }),
     };
+    const view = request.query.view ?? 'all';
+    if (!['all', 'awaiting-invoice'].includes(view)) {
+      return response.status(400).json({ message: 'Unknown renewal view.' });
+    }
+    if (view === 'awaiting-invoice') {
+      if (!request.canReviewAll) return response.status(403).json({ message: 'Invoice review requires Finance or Admin access.' });
+      Object.assign(filter, {
+        'renewalDecision.action': 'reduce-seats',
+        'renewalDecision.estimate': { $type: 'object' },
+        'renewalExecution.status': 'confirmed',
+        'renewalExecution.invoice': { $exists: false },
+        $expr: { $and: [
+          { $eq: ['$noticeDeadline', '$renewalDecision.noticeDeadline'] },
+          { $eq: ['$renewalDecision.revision', '$renewalExecution.decisionRevision'] },
+        ] },
+      });
+    }
     const rows = await subscriptions.find(filter, { projection: selectFields })
       .sort({ noticeDeadline: -1, _id: -1 }).skip((page - 1) * 25).limit(26).toArray();
     response.json({
