@@ -56,8 +56,32 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
     }
   }
 
+  async function recordFollowUp(event) {
+    event.preventDefault();
+    const note = new FormData(event.currentTarget).get('note');
+    setSaving(true);
+    setError('');
+    try {
+      await request(`${endpoint}/${item.id}/invoice/follow-ups`, { token, method: 'POST',
+        body: { note, decisionRevision: item.decision.revision, executionRevision: item.execution.revision,
+          previousRevision: item.execution.followUpRevision ?? null, noticeDeadline: item.noticeDeadline } });
+      onSaved();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   const estimate = item.decision.estimate;
   return (<>
+    {item.execution?.status === 'confirmed' && item.execution.invoice?.variance.startsWith('-') &&
+      <form onSubmit={recordFollowUp}>
+        <h4>Vendor follow-up · invoice {item.execution.invoice.reference}</h4>
+        <label>Contact details or vendor response<textarea name="note" required maxLength={500}
+          placeholder="When did you contact the vendor, and what did they say?" /></label>
+        <button disabled={saving}>Save follow-up note</button>
+      </form>}
     {estimate && item.execution?.status === 'confirmed' && !item.execution.invoice && <form onSubmit={verify}>
       <h4>Verify savings against an invoice · {item.name}</h4>
       <p>Use the seat charge for one full {estimate.period} in {estimate.currency}, excluding taxes and unrelated fees.</p>

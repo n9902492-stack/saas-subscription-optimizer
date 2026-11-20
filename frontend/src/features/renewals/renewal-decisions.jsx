@@ -119,7 +119,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                       setSelected(item); setIncludeTerms(!!item.decision?.estimate); setAction(item.decision?.action ?? ''); setError('');
                     }}>{item.decision ? 'Edit decision' : 'Record decision'}</button>}
                       {item.canTrackExecution && <button type="button" className="secondary" disabled={saving || !!tracking}
-                        onClick={() => { setSelected(null); setHistory(null); setTracking(item); }}>{item.execution?.status === 'confirmed' && item.decision.estimate && !item.execution.invoice ? 'Review invoice' : 'Track execution'}</button>}
+                        onClick={() => { setSelected(null); setHistory(null); setTracking(item); }}>{item.execution?.status === 'confirmed' && item.decision.estimate && !item.execution.invoice ? 'Review invoice' : item.execution?.invoice?.variance.startsWith('-') ? 'Record vendor follow-up' : 'Track execution'}</button>}
                       {item.canViewHistory && <button type="button" className="secondary" disabled={saving || !!tracking}
                         onClick={() => { setSelected(null); setHistory(item); }}>View history</button>}
                     </td>

@@ -33,7 +33,7 @@ export default function RenewalHistory({ item, endpoint, token, decisionLabels, 
       ) : result.events.length ? (
         <ol>{result.events.map((event) => (
           <li key={event.revision}>
-            <strong>{event.type === 'invoice' ? 'Invoice reviewed' : event.type === 'decision' ? decisionLabels[event.action] :
+            <strong>{event.type === 'invoice-follow-up' ? 'Vendor follow-up recorded' : event.type === 'invoice' ? 'Invoice reviewed' : event.type === 'decision' ? decisionLabels[event.action] :
               `${executionLabels[event.previousStatus]} → ${executionLabels[event.status]}`}</strong>
             {event.seatsToReduce && ` · ${event.seatsToReduce} seats`}
             {event.invoice && <div>Invoice {event.invoice.reference} · {event.invoice.periodStart} · {event.invoice.currency}
