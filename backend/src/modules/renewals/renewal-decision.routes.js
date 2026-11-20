@@ -1,3 +1,4 @@
+import { summarizeSavings } from './savings-summary.js';
 import { reconcileInvoice } from './invoice-savings.js';
 import { estimateSeatSavings } from './seat-savings.js';
 import { Router } from 'express';
@@ -52,6 +53,11 @@ export function renewalDecisionRoutes(database, requireSession) {
       items: rows.slice(0, 25).map((item) => toResponse(item, request.session.userId, request.canReviewAll)),
       hasMore: page < 1000 && rows.length > 25,
     });
+  });
+
+  router.get('/savings-summary', async (request, response) => {
+    if (!request.canReviewAll) return response.status(403).json({ message: 'Finance or Admin access required.' });
+    response.json(await summarizeSavings(subscriptions, request.workspaceId));
   });
 
   router.get('/:subscriptionId/history', async (request, response) => {

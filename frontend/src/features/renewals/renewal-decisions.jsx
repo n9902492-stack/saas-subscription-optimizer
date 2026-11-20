@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
+import SavingsSummary from './savings-summary';
 import RenewalHistory from './renewal-history';
 import RenewalExecutionForm, { executionLabels } from './renewal-execution-form';
 
 const labels = { keep: 'Keep', 'reduce-seats': 'Reduce seats', 'review-overlap': 'Review overlap', cancel: 'Cancel' };
 
-export default function RenewalDecisions({ workspaceId, token, revision }) {
+export default function RenewalDecisions({ workspaceId, token, revision, showSavings }) {
   const endpoint = `/api/workspaces/${workspaceId}/renewal-decisions`;
   const [page, setPage] = useState(1);
   const [refresh, setRefresh] = useState(0);
@@ -68,6 +69,7 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
 
   return (
     <section className="payment-panel">
+      {showSavings && <SavingsSummary key={JSON.stringify([endpoint, revision, refresh])} endpoint={endpoint} token={token} />}
       <h3>Renewal decisions</h3>
       {!current ? <p role="status">Loading renewal decisions…</p> : current.error ? (
         <div role="alert"><p>{current.error}</p><button type="button" onClick={reload}>Retry</button></div>

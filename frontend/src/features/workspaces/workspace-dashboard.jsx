@@ -94,7 +94,7 @@ export default function WorkspaceDashboard({ workspace, token, onBack }) {
       {canManageSources && <Subscriptions workspaceId={workspace.id} token={token} vendorRevision={matchVersion} onSaved={() => setSubscriptionVersion((value) => value + 1)} />}
       {canManageSources && <RenewalCalendar workspaceId={workspace.id} token={token} revision={subscriptionVersion} />}
       {canManageSources && <RenewalReminders workspaceId={workspace.id} token={token} revision={subscriptionVersion} />}
-      <RenewalDecisions workspaceId={workspace.id} token={token} revision={subscriptionVersion} />
+      <RenewalDecisions showSavings={canManageSources} workspaceId={workspace.id} token={token} revision={subscriptionVersion} />
     </div>
   );
 }
