@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
-import { executionLabels } from './renewal-execution-form';
+import { executionLabels, followUpLabels } from './renewal-execution-form';
 
 const dateFormat = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' });
 
@@ -35,6 +35,7 @@ export default function RenewalHistory({ item, endpoint, token, decisionLabels, 
           <li key={event.revision}>
             <strong>{event.type === 'invoice-follow-up' ? 'Vendor follow-up recorded' : event.type === 'invoice' ? 'Invoice reviewed' : event.type === 'decision' ? decisionLabels[event.action] :
               `${executionLabels[event.previousStatus]} → ${executionLabels[event.status]}`}</strong>
+            {event.type === 'invoice-follow-up' && event.status && <div>{followUpLabels[event.status]}</div>}
             {event.seatsToReduce && ` · ${event.seatsToReduce} seats`}
             {event.invoice && <div>Invoice {event.invoice.reference} · {event.invoice.periodStart} · {event.invoice.currency}
               {' '}baseline {event.invoice.baseline}, charged {event.invoice.charge}, actual savings {event.invoice.savings},

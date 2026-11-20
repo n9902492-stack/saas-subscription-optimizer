@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { request } from '../workspaces/api-client';
 import SavingsSummary from './savings-summary';
 import RenewalHistory from './renewal-history';
-import RenewalExecutionForm, { executionLabels } from './renewal-execution-form';
+import RenewalExecutionForm, { executionLabels, followUpLabels } from './renewal-execution-form';
 
 const labels = { keep: 'Keep', 'reduce-seats': 'Reduce seats', 'review-overlap': 'Review overlap', cancel: 'Cancel' };
 
@@ -113,6 +113,8 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                         Shortfall: {item.execution.invoice.currency} {item.execution.invoice.variance.slice(1)}
                         {' · '}Invoice {item.execution.invoice.reference}
                       </div>}
+                      {item.canTrackExecution && item.execution?.followUpStatus &&
+                        <div>Vendor follow-up: {followUpLabels[item.execution.followUpStatus]}</div>}
                       {item.execution?.note && <div>{item.execution.note}</div>}
                     </td>
                     <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {

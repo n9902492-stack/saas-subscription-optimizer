@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { request } from '../workspaces/api-client';
 
+export const followUpLabels = { 'awaiting-vendor': 'Awaiting vendor response', resolved: 'Resolved' };
+
 export const executionLabels = {
   pending: 'Pending', submitted: 'Submitted to vendor', confirmed: 'Confirmed', reopened: 'Reopened',
 };
@@ -58,12 +60,12 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
 
   async function recordFollowUp(event) {
     event.preventDefault();
-    const note = new FormData(event.currentTarget).get('note');
+    const fields = new FormData(event.currentTarget);
     setSaving(true);
     setError('');
     try {
       await request(`${endpoint}/${item.id}/invoice/follow-ups`, { token, method: 'POST',
-        body: { note, decisionRevision: item.decision.revision, executionRevision: item.execution.revision,
+        body: { note: fields.get('note'), status: fields.get('status'), decisionRevision: item.decision.revision, executionRevision: item.execution.revision,
           previousRevision: item.execution.followUpRevision ?? null, noticeDeadline: item.noticeDeadline } });
       onSaved();
     } catch (failure) {
@@ -78,6 +80,11 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
     {item.execution?.status === 'confirmed' && item.execution.invoice?.variance.startsWith('-') &&
       <form onSubmit={recordFollowUp}>
         <h4>Vendor follow-up · invoice {item.execution.invoice.reference}</h4>
+        <label>Follow-up status
+          <select name="status" defaultValue={item.execution.followUpStatus ?? 'awaiting-vendor'}>
+            {Object.entries(followUpLabels).map(([status, label]) => <option key={status} value={status}>{label}</option>)}
+          </select>
+        </label>
         <label>Contact details or vendor response<textarea name="note" required maxLength={500}
           placeholder="When did you contact the vendor, and what did they say?" /></label>
         <button disabled={saving}>Save follow-up note</button>

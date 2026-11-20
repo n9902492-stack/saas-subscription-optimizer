@@ -225,21 +225,24 @@ export function renewalDecisionRoutes(database, requireSession) {
   router.post('/:subscriptionId/invoice/follow-ups', async (request, response) => {
     if (!request.canReviewAll) return response.status(403).json({ message: 'Finance or Admin access required.' });
     const id = request.params.subscriptionId;
-    const { decisionRevision, executionRevision, previousRevision, noticeDeadline, note } = request.body ?? {};
+    const { decisionRevision, executionRevision, previousRevision, noticeDeadline, note, status } = request.body ?? {};
     if (![id, decisionRevision, executionRevision].every(value => typeof value === 'string' && objectIdPattern.test(value)) ||
         !(previousRevision === null || (typeof previousRevision === 'string' && objectIdPattern.test(previousRevision))) ||
+        (status !== undefined && !['awaiting-vendor', 'resolved'].includes(status)) ||
         typeof noticeDeadline !== 'string' || typeof note !== 'string' || !note.trim() || note.length > 500) {
-      return response.status(400).json({ message: 'Enter a follow-up note of up to 500 characters and refresh the renewal details.' });
+      return response.status(400).json({ message: 'Choose a valid status and enter a follow-up note of up to 500 characters and refresh the renewal details.' });
     }
     const event = { type: 'invoice-follow-up', revision: new ObjectId().toHexString(), decisionRevision,
       executionRevision, noticeDeadline, note: note.trim(), recordedAt: new Date(), recordedBy: request.session.userId };
+    if (status !== undefined) event.status = status;
     const result = await subscriptions.updateOne({
       _id: new ObjectId(id), workspaceId: request.workspaceId, noticeVerifiedAt: { $type: 'date' }, noticeDeadline,
       'renewalDecision.noticeDeadline': noticeDeadline, 'renewalDecision.revision': decisionRevision,
       'renewalExecution.decisionRevision': decisionRevision, 'renewalExecution.revision': executionRevision,
       'renewalExecution.status': 'confirmed', 'renewalExecution.invoice.variance': /^-/,
       'renewalExecution.followUpRevision': previousRevision,
-    }, { $set: { 'renewalExecution.followUpRevision': event.revision }, $push: appendHistory(event) });
+    }, { $set: { 'renewalExecution.followUpRevision': event.revision,
+      ...(status === undefined ? {} : { 'renewalExecution.followUpStatus': status }) }, $push: appendHistory(event) });
     if (!result.modifiedCount) return response.status(409).json({ message: 'This invoice or its follow-up changed. Close and refresh before adding a note.' });
     response.status(201).json({ revision: event.revision });
   });
