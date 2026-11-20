@@ -117,6 +117,8 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                       </div>}
                       {item.canTrackExecution && item.execution?.followUpStatus &&
                         <div>Vendor follow-up: {followUpLabels[item.execution.followUpStatus]}</div>}
+                      {item.canTrackExecution && item.execution?.nextContactDate &&
+                        <div>Next contact: {item.execution.nextContactDate}</div>}
                       {item.execution?.note && <div>{item.execution.note}</div>}
                     </td>
                     <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {

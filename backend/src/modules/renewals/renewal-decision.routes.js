@@ -226,16 +226,23 @@ export function renewalDecisionRoutes(database, requireSession) {
   router.post('/:subscriptionId/invoice/follow-ups', async (request, response) => {
     if (!request.canReviewAll) return response.status(403).json({ message: 'Finance or Admin access required.' });
     const id = request.params.subscriptionId;
-    const { decisionRevision, executionRevision, previousRevision, noticeDeadline, note, status } = request.body ?? {};
+    const { decisionRevision, executionRevision, previousRevision, noticeDeadline, note, status, nextContactDate } = request.body ?? {};
     if (![id, decisionRevision, executionRevision].every(value => typeof value === 'string' && objectIdPattern.test(value)) ||
         !(previousRevision === null || (typeof previousRevision === 'string' && objectIdPattern.test(previousRevision))) ||
         (status !== undefined && !['awaiting-vendor', 'resolved'].includes(status)) ||
         typeof noticeDeadline !== 'string' || typeof note !== 'string' || !note.trim() || note.length > 500) {
       return response.status(400).json({ message: 'Choose a valid status and enter a follow-up note of up to 500 characters and refresh the renewal details.' });
     }
+    if (nextContactDate != null && (typeof nextContactDate !== 'string' ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(nextContactDate) ||
+        new Date(nextContactDate).toJSON()?.slice(0, 10) !== nextContactDate)) {
+      return response.status(400).json({ message: 'Choose a valid next contact date.' });
+    }
+    const contactDate = status === 'resolved' ? null : nextContactDate;
     const event = { type: 'invoice-follow-up', revision: new ObjectId().toHexString(), decisionRevision,
       executionRevision, noticeDeadline, note: note.trim(), recordedAt: new Date(), recordedBy: request.session.userId };
     if (status !== undefined) event.status = status;
+    if (contactDate !== undefined) event.nextContactDate = contactDate;
     const result = await subscriptions.updateOne({
       _id: new ObjectId(id), workspaceId: request.workspaceId, noticeVerifiedAt: { $type: 'date' }, noticeDeadline,
       'renewalDecision.noticeDeadline': noticeDeadline, 'renewalDecision.revision': decisionRevision,
@@ -243,7 +250,8 @@ export function renewalDecisionRoutes(database, requireSession) {
       'renewalExecution.status': 'confirmed', 'renewalExecution.invoice.variance': /^-/,
       'renewalExecution.followUpRevision': previousRevision,
     }, { $set: { 'renewalExecution.followUpRevision': event.revision,
-      ...(status === undefined ? {} : { 'renewalExecution.followUpStatus': status }) }, $push: appendHistory(event) });
+      ...(status === undefined ? {} : { 'renewalExecution.followUpStatus': status }),
+      ...(contactDate === undefined ? {} : { 'renewalExecution.nextContactDate': contactDate }) }, $push: appendHistory(event) });
     if (!result.modifiedCount) return response.status(409).json({ message: 'This invoice or its follow-up changed. Close and refresh before adding a note.' });
     response.status(201).json({ revision: event.revision });
   });

@@ -65,7 +65,7 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
     setError('');
     try {
       await request(`${endpoint}/${item.id}/invoice/follow-ups`, { token, method: 'POST',
-        body: { note: fields.get('note'), status: fields.get('status'), decisionRevision: item.decision.revision, executionRevision: item.execution.revision,
+        body: { note: fields.get('note'), nextContactDate: fields.get('nextContactDate') || null, status: fields.get('status'), decisionRevision: item.decision.revision, executionRevision: item.execution.revision,
           previousRevision: item.execution.followUpRevision ?? null, noticeDeadline: item.noticeDeadline } });
       onSaved();
     } catch (failure) {
@@ -84,6 +84,9 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
           <select name="status" defaultValue={item.execution.followUpStatus ?? 'awaiting-vendor'}>
             {Object.entries(followUpLabels).map(([status, label]) => <option key={status} value={status}>{label}</option>)}
           </select>
+        </label>
+        <label>Next contact date (optional, for open follow-ups)
+          <input type="date" name="nextContactDate" defaultValue={item.execution.nextContactDate ?? ''} />
         </label>
         <label>Contact details or vendor response<textarea name="note" required maxLength={500}
           placeholder="When did you contact the vendor, and what did they say?" /></label>
