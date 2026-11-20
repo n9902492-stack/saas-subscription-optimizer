@@ -87,13 +87,14 @@ export default function RenewalDecisions({ workspaceId, token, revision }) {
                         : 'Savings not estimated'}</div>}</td>
                     <td>{item.decision?.reason ?? '—'}</td>
                     <td>{item.decision ? executionLabels[item.execution?.status ?? 'pending'] : '—'}
+                      {item.execution?.invoice && <div>Invoice savings: {item.execution.invoice.currency} {item.execution.invoice.savings} for the period starting {item.execution.invoice.periodStart}</div>}
                       {item.execution?.note && <div>{item.execution.note}</div>}
                     </td>
                     <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {
                       setSelected(item); setIncludeTerms(!!item.decision?.estimate); setAction(item.decision?.action ?? ''); setError('');
                     }}>{item.decision ? 'Edit decision' : 'Record decision'}</button>}
                       {item.canTrackExecution && <button type="button" className="secondary" disabled={saving || !!tracking}
-                        onClick={() => { setSelected(null); setHistory(null); setTracking(item); }}>Track execution</button>}
+                        onClick={() => { setSelected(null); setHistory(null); setTracking(item); }}>{item.execution?.status === 'confirmed' && item.decision.estimate && !item.execution.invoice ? 'Review invoice' : 'Track execution'}</button>}
                       {item.canViewHistory && <button type="button" className="secondary" disabled={saving || !!tracking}
                         onClick={() => { setSelected(null); setHistory(item); }}>View history</button>}
                     </td>

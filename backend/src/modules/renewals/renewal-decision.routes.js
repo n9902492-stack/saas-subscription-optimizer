@@ -1,3 +1,4 @@
+import { reconcileInvoice } from './invoice-savings.js';
 import { estimateSeatSavings } from './seat-savings.js';
 import { Router } from 'express';
 import { ObjectId } from 'mongodb';
@@ -164,6 +165,36 @@ export function renewalDecisionRoutes(database, requireSession) {
     });
     if (!updated) return conflict();
     response.json(toResponse(updated, request.session.userId, true));
+  });
+
+  router.put('/:subscriptionId/invoice', async (request, response) => {
+    if (!request.canReviewAll) return response.status(403).json({ message: 'Invoice review requires Finance or Admin access.' });
+    const id = request.params.subscriptionId;
+    const input = request.body ?? {};
+    if (![id, input.executionRevision, input.decisionRevision].every(value =>
+      typeof value === 'string' && objectIdPattern.test(value))) {
+      return response.status(400).json({ message: 'Invalid renewal reference.' });
+    }
+    const filter = {
+      _id: new ObjectId(id), workspaceId: request.workspaceId, noticeVerifiedAt: { $type: 'date' },
+      'renewalDecision.revision': input.decisionRevision, 'renewalDecision.estimate': { $type: 'object' },
+      'renewalExecution.status': 'confirmed', 'renewalExecution.revision': input.executionRevision,
+      'renewalExecution.invoice': { $exists: false },
+      $expr: { $eq: ['$noticeDeadline', '$renewalDecision.noticeDeadline'] },
+    };
+    const conflict = () => response.status(409).json({ message: 'This confirmation changed or already has an invoice. Refresh to review it.' });
+    const row = await subscriptions.findOne(filter, { projection: { renewalDecision: 1 } });
+    if (!row) return conflict();
+    const invoice = reconcileInvoice(row.renewalDecision.estimate, input);
+    if (!invoice) return response.status(400).json({ message: 'Enter an invoice reference, valid charge and full billing period starting on or after the reduction.' });
+    const result = await subscriptions.updateOne(filter, {
+      $set: { 'renewalExecution.invoice': invoice },
+      $push: appendHistory({ type: 'invoice', invoice, revision: new ObjectId().toHexString(),
+        decisionRevision: input.decisionRevision, executionRevision: input.executionRevision,
+        noticeDeadline: row.renewalDecision.noticeDeadline, recordedBy: request.session.userId, recordedAt: new Date() }),
+    });
+    if (!result.modifiedCount) return conflict();
+    response.json(invoice);
   });
 
   return router;

@@ -40,7 +40,32 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
     }
   }
 
-  return (
+  async function verify(event) {
+    event.preventDefault();
+    const fields = Object.fromEntries(new FormData(event.currentTarget));
+    setSaving(true);
+    setError('');
+    try {
+      await request(`${endpoint}/${item.id}/invoice`, { token, method: 'PUT',
+        body: { ...fields, decisionRevision: item.decision.revision, executionRevision: item.execution.revision } });
+      onSaved();
+    } catch (failure) {
+      setError(failure.message);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const estimate = item.decision.estimate;
+  return (<>
+    {estimate && item.execution?.status === 'confirmed' && !item.execution.invoice && <form onSubmit={verify}>
+      <h4>Verify savings against an invoice · {item.name}</h4>
+      <p>Use the seat charge for one full {estimate.period} in {estimate.currency}, excluding taxes and unrelated fees.</p>
+      <label>Invoice reference<input name="reference" required maxLength={100} /></label>
+      <label>Billing period start<input type="date" name="periodStart" required min={estimate.effectiveDate} /></label>
+      <label>Invoiced seat charge ({estimate.currency})<input name="charge" required inputMode="decimal" /></label>
+      <button disabled={saving}>Record invoice savings</button>
+    </form>}
     <form onSubmit={save}>
       <h4>Track vendor follow-up · {item.name}</h4>
       <label>Status
@@ -57,5 +82,5 @@ export default function RenewalExecutionForm({ item, endpoint, token, onClose, o
       <button type="button" className="secondary" disabled={saving} onClick={onClose}>Close and refresh</button>
       {error && <p role="alert">{error}</p>}
     </form>
-  );
+  </>);
 }
