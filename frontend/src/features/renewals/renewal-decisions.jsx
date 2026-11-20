@@ -36,6 +36,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
 
   const emptyMessages = {
     all: 'No verified renewals to review.',
+    'open-follow-ups': 'No open vendor follow-ups on this page.',
     'below-estimate': 'No reviewed invoices with savings below estimate on this page.',
     'awaiting-invoice': 'No renewals awaiting invoice review on this page.',
   };
@@ -86,6 +87,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
           setError('');
         }}>
           <option value="all">All verified renewals</option>
+          <option value="open-follow-ups">Open vendor follow-ups</option>
           <option value="below-estimate">Invoice savings below estimate</option>
           <option value="awaiting-invoice">Awaiting invoice review</option>
         </select>
@@ -109,7 +111,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                     <td>{item.decision?.reason ?? '—'}</td>
                     <td>{item.decision ? executionLabels[item.execution?.status ?? 'pending'] : '—'}
                       {item.execution?.invoice && <div>Invoice savings: {item.execution.invoice.currency} {item.execution.invoice.savings} for the period starting {item.execution.invoice.periodStart}</div>}
-                      {view === 'below-estimate' && item.execution?.invoice && <div>
+                      {(view === 'below-estimate' || view === 'open-follow-ups') && item.execution?.invoice && <div>
                         Shortfall: {item.execution.invoice.currency} {item.execution.invoice.variance.slice(1)}
                         {' · '}Invoice {item.execution.invoice.reference}
                       </div>}

@@ -48,7 +48,7 @@ export function renewalDecisionRoutes(database, requireSession) {
       ...(request.canReviewAll ? {} : { ownerId: request.session.userId }),
     };
     const view = request.query.view ?? 'all';
-    if (!['all', 'awaiting-invoice', 'below-estimate'].includes(view)) {
+    if (!['all', 'awaiting-invoice', 'below-estimate', 'open-follow-ups'].includes(view)) {
       return response.status(400).json({ message: 'Unknown renewal view.' });
     }
     if (view !== 'all') {
@@ -60,6 +60,7 @@ export function renewalDecisionRoutes(database, requireSession) {
         ...(view === 'awaiting-invoice'
           ? { 'renewalExecution.invoice': { $exists: false } }
           : { 'renewalExecution.invoice.variance': /^-/ }),
+        ...(view === 'open-follow-ups' ? { 'renewalExecution.followUpStatus': { $ne: 'resolved' } } : {}),
         $expr: { $and: [
           { $eq: ['$noticeDeadline', '$renewalDecision.noticeDeadline'] },
           { $eq: ['$renewalDecision.revision', '$renewalExecution.decisionRevision'] },
