@@ -34,6 +34,11 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
     return () => controller.abort();
   }, [endpoint, token, page, view, revision, refresh]);
 
+  const emptyMessages = {
+    all: 'No verified renewals to review.',
+    'below-estimate': 'No reviewed invoices with savings below estimate on this page.',
+    'awaiting-invoice': 'No renewals awaiting invoice review on this page.',
+  };
   const current = snapshot?.page === page && snapshot.view === view && snapshot.revision === revision && snapshot.refresh === refresh
     ? snapshot : null;
   const active = selected && current?.data?.items.find((item) =>
@@ -81,6 +86,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
           setError('');
         }}>
           <option value="all">All verified renewals</option>
+          <option value="below-estimate">Invoice savings below estimate</option>
           <option value="awaiting-invoice">Awaiting invoice review</option>
         </select>
       </label>}
@@ -103,6 +109,10 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                     <td>{item.decision?.reason ?? '—'}</td>
                     <td>{item.decision ? executionLabels[item.execution?.status ?? 'pending'] : '—'}
                       {item.execution?.invoice && <div>Invoice savings: {item.execution.invoice.currency} {item.execution.invoice.savings} for the period starting {item.execution.invoice.periodStart}</div>}
+                      {view === 'below-estimate' && item.execution?.invoice && <div>
+                        Shortfall: {item.execution.invoice.currency} {item.execution.invoice.variance.slice(1)}
+                        {' · '}Invoice {item.execution.invoice.reference}
+                      </div>}
                       {item.execution?.note && <div>{item.execution.note}</div>}
                     </td>
                     <td>{item.canDecide && <button type="button" className="secondary" disabled={saving || !!tracking} onClick={() => {
@@ -117,7 +127,7 @@ export default function RenewalDecisions({ workspaceId, token, revision, showSav
                 ))}</tbody>
               </table>
             </div>
-          ) : <p>{view === 'awaiting-invoice' ? 'No renewals awaiting invoice review on this page.' : 'No verified renewals to review.'}</p>}
+          ) : <p>{emptyMessages[view]}</p>}
           {(page > 1 || current.data.hasMore) && (
             <div className="transaction-pagination">
               <button type="button" disabled={saving || !!tracking || page === 1} onClick={() => { setSelected(null); setHistory(null); setPage(page - 1); }}>Previous</button>
