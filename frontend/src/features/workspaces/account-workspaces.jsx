@@ -1,11 +1,12 @@
 'use client';
 
+import Link from 'next/link';
 import { useState } from 'react';
 
 import { request } from './api-client';
 import WorkspaceDashboard from './workspace-dashboard';
 
-export default function AccountWorkspaces({ initialMode }) {
+export default function AccountWorkspaces({ initialMode, children }) {
   const [mode, setMode] = useState(initialMode);
   const [token, setToken] = useState('');
   const [workspaces, setWorkspaces] = useState([]);
@@ -49,45 +50,53 @@ export default function AccountWorkspaces({ initialMode }) {
     });
   }
 
-  if (token && workspace) {
-    return <section><WorkspaceDashboard key={workspace.id} workspace={workspace} token={token} onBack={() => selectWorkspace(null)} /></section>;
-  }
+  const showTeam = !token && mode === 'signin';
 
   return (
-    <section>
-      {token ? (
-        <>
-          <h2>Your workspaces</h2>
-          <form onSubmit={createWorkspace}>
-            <label>Workspace name<input name="name" required maxLength={100} /></label>
-            <button disabled={busy}>Create workspace</button>
-          </form>
-          {workspaces.length ? <ul>{workspaces.map((item) => (
-            <li key={item.id}><button type="button" className="secondary" onClick={() => selectWorkspace(item)}>{item.name} · {item.role}</button></li>
-          ))}</ul> : <p>No workspaces yet.</p>}
-          <button disabled={busy} onClick={() => run(async () => {
-            await request('/api/auth/signout', { token, method: 'POST' });
-            setToken('');
-            setWorkspaces([]);
-            setMode('signin');
-          })}>Sign out</button>
-        </>
-      ) : (
-        <>
-          <h2>{mode === 'signup' ? 'Create your account' : 'Sign in'}</h2>
-          <form onSubmit={authenticate}>
-            <label>Email<input name="email" type="email" autoComplete="email" required /></label>
-            <label>Password<input name="password" type="password" minLength={12} maxLength={128}
-              autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>
-            <button disabled={busy}>{mode === 'signup' ? 'Create account' : 'Sign in'}</button>
-          </form>
-          <button disabled={busy} onClick={() => {
-            setMode(mode === 'signup' ? 'signin' : 'signup');
-            setError('');
-          }}>{mode === 'signup' ? 'I already have an account' : 'Create an account'}</button>
-        </>
-      )}
-      {error && <p role="alert">{error}</p>}
-    </section>
+    <main className={showTeam ? 'account' : 'account account-single'}>
+      <div className="account-main">
+        <Link className="brand" href="/">SaaS Optimizer</Link>
+        {token && workspace ? (
+          <WorkspaceDashboard key={workspace.id} workspace={workspace} token={token} onBack={() => selectWorkspace(null)} />
+        ) : (
+          <section>
+            {token ? (
+              <>
+                <h2>Your workspaces</h2>
+                <form onSubmit={createWorkspace}>
+                  <label>Workspace name<input name="name" required maxLength={100} /></label>
+                  <button disabled={busy}>Create workspace</button>
+                </form>
+                {workspaces.length ? <ul>{workspaces.map((item) => (
+                  <li key={item.id}><button type="button" className="secondary" onClick={() => selectWorkspace(item)}>{item.name} · {item.role}</button></li>
+                ))}</ul> : <p>No workspaces yet.</p>}
+                <button disabled={busy} onClick={() => run(async () => {
+                  await request('/api/auth/signout', { token, method: 'POST' });
+                  setToken('');
+                  setWorkspaces([]);
+                  setMode('signin');
+                })}>Sign out</button>
+              </>
+            ) : (
+              <>
+                <h2>{mode === 'signup' ? 'Create your account' : 'Sign in'}</h2>
+                <form onSubmit={authenticate}>
+                  <label>Email<input name="email" type="email" autoComplete="email" required /></label>
+                  <label>Password<input name="password" type="password" minLength={12} maxLength={128}
+                    autoComplete={mode === 'signup' ? 'new-password' : 'current-password'} required /></label>
+                  <button disabled={busy}>{mode === 'signup' ? 'Create account' : 'Sign in'}</button>
+                </form>
+                <button disabled={busy} onClick={() => {
+                  setMode(mode === 'signup' ? 'signin' : 'signup');
+                  setError('');
+                }}>{mode === 'signup' ? 'I already have an account' : 'Create an account'}</button>
+              </>
+            )}
+            {error && <p role="alert">{error}</p>}
+          </section>
+        )}
+      </div>
+      {showTeam && children}
+    </main>
   );
 }

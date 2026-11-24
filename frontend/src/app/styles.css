@@ -1,50 +1,64 @@
-:root { color-scheme: light; --ink: #132628; --accent: #164b49; }
+:root { color-scheme: light; --ink: #14253D; --accent: #1263C7; }
 * { box-sizing: border-box; }
-body { margin: 0; background: #f0f5f4; color: var(--ink); font: 1rem/1.55 system-ui, sans-serif; }
+body { margin: 0; background: #EAF3FC; color: var(--ink); font: 1rem/1.55 system-ui, sans-serif; }
 a { color: inherit; }
 .brand { font-weight: 800; text-decoration: none; letter-spacing: -.025em; }
 .landing { max-width: 1320px; margin: auto; padding: 0 clamp(1.25rem, 5vw, 5rem); }
 .topbar, nav { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
-.topbar { padding: 1.4rem 0; border-bottom: 1px solid #cad7d3; }
+.topbar { padding: 1.4rem 0; border-bottom: 1px solid #C7D9EB; }
 .hero { display: grid; grid-template-columns: 1fr 1.15fr; align-items: center; gap: clamp(2rem, 6vw, 6rem); padding: clamp(3rem, 12vh, 10rem) 0; }
 h1 { font-size: clamp(2.35rem, 5vw, 5rem); line-height: 1.04; letter-spacing: -.055em; margin: 0 0 1rem; }
 .hero p { max-width: 36ch; margin-bottom: 1.6rem; }
 .cta, button { display: inline-block; background: var(--accent); color: white; text-decoration: none; font: inherit; font-weight: 650; border: 0; padding: .65rem 1rem; border-radius: .45rem; }
 figure { margin: 0; }
-video { display: block; width: 100%; border-radius: .85rem; background: #102b2b; }
+video { display: block; width: 100%; border-radius: .85rem; background: #153A66; }
 figcaption { margin-top: .65rem; font-size: .9rem; }
 .account { display: grid; grid-template-columns: 1fr 1fr; min-height: 100svh; }
 .account-main, .team { padding: clamp(1.5rem, 6vw, 6rem); }
-.account-main section { max-width: 27rem; margin: clamp(2rem, 12vh, 7rem) auto 0; }
-.team { display: flex; flex-direction: column; justify-content: center; background: #102b2b; color: #eaf8ef; }
+.account-single { grid-template-columns: minmax(0, 1fr); }
+.account-main > section { max-width: 27rem; margin: clamp(2rem, 12vh, 7rem) auto 0; }
+.workspace-dashboard { max-width: 80rem; margin: clamp(2rem, 5vh, 4rem) auto 0; }
+.team { display: flex; flex-direction: column; justify-content: center; background: #153A66; color: #F1F7FF; }
 .team h1 { font-size: clamp(2.2rem, 4vw, 4.3rem); }
 .team p { max-width: 40ch; }
 .team-steps { margin: 1rem 0 0; padding: 0; list-style: none; display: grid; gap: .7rem; }
-.team-steps li { display: flex; align-items: center; gap: .9rem; background: #20423f; border: 1px solid #54796e; border-radius: .65rem; padding: .75rem; animation: enter .55s ease-out both; }
+.team-steps li { display: flex; align-items: center; gap: .9rem; background: #214D7D; border: 1px solid #698DB4; border-radius: .65rem; padding: .75rem; animation: enter .55s ease-out both; }
 .team-steps li:nth-child(2) { animation-delay: .2s; }
 .team-steps li:nth-child(3) { animation-delay: .4s; }
-.team-steps li > span { display: grid; place-items: center; width: 2rem; aspect-ratio: 1; border-radius: 50%; background: #b6ecce; color: #13372d; font-weight: 800; }
+.team-steps li > span { display: grid; place-items: center; width: 2rem; aspect-ratio: 1; border-radius: 50%; background: #C4E1FF; color: #153A66; font-weight: 800; }
 small { display: block; }
 form { display: grid; gap: .85rem; margin-bottom: 1rem; }
 label { display: grid; gap: .3rem; }
-input { font: inherit; padding: .55rem .75rem; border: 1px solid #829998; border-radius: .4rem; }
+input { font: inherit; padding: .55rem .75rem; border: 1px solid #718AA5; border-radius: .4rem; }
 button { justify-self: start; cursor: pointer; }
 button:disabled { opacity: .65; }
 @keyframes enter { from { transform: translateY(12px); opacity: 0; } }
 @media (max-width: 760px) { .hero, .account { grid-template-columns: 1fr; } }
 @media (prefers-reduced-motion: reduce) { .team-steps li { animation: none; } }
-.secondary { color: var(--accent); background: transparent; border: 1px solid #829998; }
-.payment-panel { border-top: 1px solid #cad7d3; margin-top: 1.25rem; padding-top: .75rem; }
+.secondary { color: var(--accent); background: transparent; border: 1px solid #718AA5; }
+.payment-panel { border-top: 1px solid #C7D9EB; margin-top: 1.25rem; padding-top: .75rem; }
 .payment-panel li, .account-main li { margin-bottom: .5rem; }
-select { font: inherit; padding: .55rem .75rem; border: 1px solid #829998; border-radius: .4rem; }
+select { font: inherit; padding: .55rem .75rem; border: 1px solid #718AA5; border-radius: .4rem; }
 .statement-table { overflow-x: auto; margin: 0 0 .75rem; }
 .statement-table table { width: 100%; border-collapse: collapse; }
-.statement-table th, .statement-table td { text-align: left; padding: .4rem; border-bottom: 1px solid #cad7d3; }
+.statement-table th, .statement-table td { text-align: left; padding: .4rem; border-bottom: 1px solid #C7D9EB; }
 .transaction-pagination { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: .75rem; }
 .verify-notice { display: flex; align-items: center; gap: .5rem; }
 .renewal-nav { display: flex; align-items: center; justify-content: space-between; gap: .5rem; flex-wrap: wrap; margin-bottom: .65rem; }
 .renewal-scroll { overflow-x: auto; }
 .renewal-grid { display: grid; grid-template-columns: repeat(7, minmax(6rem, 1fr)); gap: .25rem; min-width: 44rem; }
-.renewal-day { min-height: 4.25rem; border: 1px solid #cad7d3; padding: .35rem; overflow-wrap: anywhere; }
-.renewal-day[aria-current="date"] { border-color: var(--accent); background: #e5f3eb; }
+.renewal-day { min-height: 4.25rem; border: 1px solid #C7D9EB; padding: .35rem; overflow-wrap: anywhere; }
+.renewal-day[aria-current="date"] { border-color: var(--accent); background: #D8EAFF; }
 .renewal-day ul { padding-left: 1rem; margin: .25rem 0; font-size: .8rem; }
+
+.account-main { min-width: 0; }
+.payment-panel {
+  background: #F8FBFF;
+  border: 1px solid #C7D9EB;
+  border-radius: .85rem;
+  padding: clamp(.85rem, 2vw, 1.4rem);
+}
+.statement-table thead { background: #DFEEFC; color: #153A66; }
+.renewal-day { background: #F8FBFF; }
+.renewal-day[aria-current="date"] { background: #D8EAFF; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
