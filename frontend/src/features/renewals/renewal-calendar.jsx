@@ -22,7 +22,7 @@ function buildDays(month, rows) {
   return days;
 }
 
-export default function RenewalCalendar({ workspaceId, token, revision }) {
+export default function RenewalCalendar({ workspaceId, token, revision, compact = false }) {
   const [month, setMonth] = useState('');
   const [snapshot, setSnapshot] = useState(null);
   const [error, setError] = useState('');
@@ -72,7 +72,7 @@ export default function RenewalCalendar({ workspaceId, token, revision }) {
             <strong aria-live="polite">{monthLabel.format(new Date(`${data.month}-01T00:00:00Z`))}</strong>
             <button type="button" className="secondary" onClick={() => changeMonth(1)}>Next month</button>
           </div>
-          <div className="renewal-scroll">
+          <div className="renewal-scroll" tabIndex={0} role="region" aria-label="Renewal calendar, scroll horizontally">
             <div className="renewal-grid">
               {weekdays.map((day) => <strong key={day}>{day}</strong>)}
               {buildDays(data.month, data.calendar.entries).map((day, index) => day ? (
@@ -84,7 +84,7 @@ export default function RenewalCalendar({ workspaceId, token, revision }) {
             </div>
           </div>
           {data.calendar.truncated && <p>Showing the first 200 deadlines for this month.</p>}
-          <h4>Verified deadlines in the next 30 days</h4>
+          <details open={!compact} className="calendar-upcoming"><summary>Verified deadlines in the next 30 days ({data.upcoming.entries.length}{data.upcoming.truncated ? '+' : ''})</summary>
           <p>{data.today} to {data.upcomingThrough} · UTC</p>
           {data.upcoming.entries.length ? (
             <ul>{data.upcoming.entries.map((row) => (
@@ -95,6 +95,7 @@ export default function RenewalCalendar({ workspaceId, token, revision }) {
             ))}</ul>
           ) : <p>No verified notice deadlines in this window.</p>}
           {data.upcoming.truncated && <p>Showing the first 200 upcoming deadlines.</p>}
+          </details>
         </>
       )}
     </section>

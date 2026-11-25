@@ -12,6 +12,16 @@ export async function transactionRoutes(database, requireSession) {
 
   router.use(requireSession, financeAccess(database));
 
+  router.get('/monthly-spend', async (request, response) => {
+    const rows = await imports.aggregate([
+      { $match: { workspaceId: request.workspaceId } },
+      { $unwind: '$transactions' },
+      { $group: { _id: { month: { $substrBytes: ['$transactions.date', 0, 7] }, currency: '$transactions.currency' }, amount: { $sum: '$transactions.amount' }, count: { $sum: 1 } } },
+      { $sort: { '_id.month': 1, '_id.currency': 1 } },
+    ]).toArray();
+    response.json({ items: rows.map(row => ({ ...row._id, amount: row.amount.toString(), count: row.count })) });
+  });
+
   router.get('/', async (request, response) => {
     const page = Number(request.query.page ?? 1);
     if (!Number.isSafeInteger(page) || page < 1 || page > 1000) {

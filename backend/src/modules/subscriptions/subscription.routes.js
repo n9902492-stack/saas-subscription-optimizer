@@ -31,9 +31,16 @@ export async function subscriptionRoutes(database, requireSession) {
     if (!Number.isSafeInteger(page) || page < 1 || page > 1000) {
       return response.status(400).json({ message: 'Choose a page from 1 to 1,000.' });
     }
-    const [items, owners, vendorLabels] = await Promise.all([
-      subscriptions.find({ workspaceId }, { projection: { seatSnapshot: 0, renewalHistory: 0 } }).sort({ contractEnd: 1, _id: 1 }).skip((page - 1) * 25).limit(26).toArray(),
-      members(workspaceId),
+    const query = request.query.q ?? '';
+    if (typeof query !== 'string' || query.length > 120) return response.status(400).json({ message: 'Search using up to 120 characters.' });
+    const owners = await members(workspaceId);
+    const pattern = new RegExp(query.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    const filter = { workspaceId, ...(query.trim() ? { $or: [
+      { name: pattern }, { vendor: pattern }, { ownerId: { $in: owners.filter(owner => pattern.test(owner.email)).map(owner => owner._id) } },
+    ] } : {}) };
+    const [items, total, vendorLabels] = await Promise.all([
+      subscriptions.find(filter, { projection: { 'seatSnapshot.seats': 0, renewalHistory: 0 } }).sort({ contractEnd: 1, _id: 1 }).skip((page - 1) * 25).limit(26).toArray(),
+      subscriptions.countDocuments(filter),
       aliases.distinct('vendor', { workspaceId }),
     ]);
     const vendors = [...new Map(vendorLabels.sort().map((label) => [merchantKey(label), label])).values()];
@@ -41,6 +48,7 @@ export async function subscriptionRoutes(database, requireSession) {
       items: items.slice(0, 25).map(toResponse),
       owners: owners.map((owner) => ({ id: owner._id.toHexString(), email: owner.email })),
       vendors,
+      total,
       hasMore: page < 1000 && items.length > 25,
     });
   });
@@ -131,6 +139,14 @@ function validDate(value) {
 function toResponse(record) {
   const { _id, vendor, name, ownerId, billingCycle, autoRenew, contractEnd,
     noticeDeadline, noticeEvidence, noticeVerifiedAt } = record;
+  const snapshot = record.seatSnapshot;
+  const counts = snapshot?.counts;
+  const seatSummary = snapshot && counts ? {
+    assigned: counts.active + counts.candidate + counts.unknown,
+    active: counts.active, inactive: counts.candidate, unknown: counts.unknown,
+    inactivityDays: snapshot.inactivityDays, asOf: snapshot.asOf, updatedAt: snapshot.importedAt,
+    purchased: snapshot.purchasedSeats, source: snapshot.source,
+  } : null;
   return { id: _id.toHexString(), vendor, name, ownerId: ownerId.toHexString(), billingCycle, autoRenew,
-    contractEnd, noticeDeadline, noticeEvidence, noticeVerifiedAt };
+    contractEnd, noticeDeadline, noticeEvidence, noticeVerifiedAt, seatSummary };
 }

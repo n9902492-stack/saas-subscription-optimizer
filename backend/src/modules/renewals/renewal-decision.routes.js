@@ -47,6 +47,16 @@ export function renewalDecisionRoutes(database, requireSession) {
       noticeVerifiedAt: { $type: 'date' },
       ...(request.canReviewAll ? {} : { ownerId: request.session.userId }),
     };
+    if (request.query.subscriptionId !== undefined) {
+      if (typeof request.query.subscriptionId !== 'string' || !objectIdPattern.test(request.query.subscriptionId)) return response.status(400).json({ message: 'Choose a valid subscription.' });
+      filter._id = new ObjectId(request.query.subscriptionId);
+    }
+    if (request.query.upcoming !== undefined) {
+      if (request.query.upcoming !== 'true') return response.status(400).json({ message: 'Choose a valid upcoming filter.' });
+      filter.noticeDeadline = { $gte: new Date().toISOString().slice(0, 10) };
+    }
+    const sort = request.query.sort ?? 'notice-desc';
+    if (!['notice-asc', 'notice-desc'].includes(sort)) return response.status(400).json({ message: 'Choose a valid renewal order.' });
     const view = request.query.view ?? 'all';
     if (!['all', 'awaiting-invoice', 'below-estimate', 'open-follow-ups'].includes(view)) {
       return response.status(400).json({ message: 'Unknown renewal view.' });
@@ -68,7 +78,7 @@ export function renewalDecisionRoutes(database, requireSession) {
       });
     }
     const rows = await subscriptions.find(filter, { projection: selectFields })
-      .sort({ noticeDeadline: -1, _id: -1 }).skip((page - 1) * 25).limit(26).toArray();
+      .sort({ noticeDeadline: sort === 'notice-asc' ? 1 : -1, _id: -1 }).skip((page - 1) * 25).limit(26).toArray();
     response.json({
       items: rows.slice(0, 25).map((item) => toResponse(item, request.session.userId, request.canReviewAll)),
       hasMore: page < 1000 && rows.length > 25,

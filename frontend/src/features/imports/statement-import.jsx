@@ -106,7 +106,7 @@ export default function StatementImport({ workspaceId, sources, token, onSaved }
           <p role="status">{preview.validCount} valid · {preview.invalidCount} invalid</p>
           {preview.errors.length > 0 && <ul>{preview.errors.map(({ row, message }) => <li key={row}>Row {row}: {message}</li>)}</ul>}
           {preview.rows.length > 0 && (
-            <div className="statement-table">
+            <div className="statement-table" tabIndex={0} role="region" aria-label="Statement preview table, scroll horizontally">
               <table>
                 <caption>First {preview.rows.length} valid rows</caption>
                 <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Currency</th></tr></thead>

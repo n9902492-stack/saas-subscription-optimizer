@@ -41,7 +41,7 @@ export default function RenewalReminders({ workspaceId, token, revision }) {
         <>
           <p>Showing reminders through {current.data.upcomingThrough} (UTC) for open notice windows.</p>
           {current.data.items.length ? (
-            <div className="statement-table">
+            <div className="statement-table" tabIndex={0} role="region" aria-label="Renewal reminders table, scroll horizontally">
               <table>
                 <thead><tr><th>Subscription</th><th>Owner</th><th>Reminder</th><th>Notice deadline</th><th>Status</th></tr></thead>
                 <tbody>{current.data.items.map((item) => (

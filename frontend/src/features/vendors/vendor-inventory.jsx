@@ -44,7 +44,7 @@ export default function VendorInventory({ workspaceId, token, revision }) {
           <SpendList totals={current.unmatched} />
           <h4>Matched vendors</h4>
           {current.vendors.length === 0 ? <p>Match a merchant in Saved transactions to see its vendor here.</p> : (
-            <div className="statement-table">
+            <div className="statement-table" tabIndex={0} role="region" aria-label="Vendor inventory table, scroll horizontally">
               <table>
                 <thead><tr><th>Vendor</th><th>Merchant descriptions</th><th>Net spend</th></tr></thead>
                 <tbody>{current.vendors.map((vendor) => (

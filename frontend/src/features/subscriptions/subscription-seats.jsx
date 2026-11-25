@@ -6,7 +6,7 @@ import { request } from '../workspaces/api-client';
 const labels = { active: 'Active', candidate: 'Review candidate', unknown: 'Unknown activity' };
 const pageSize = 25;
 
-export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
+export default function SubscriptionSeats({ endpoint, item, token, onClose, onSaved }) {
   const url = `${endpoint}/${item.id}/seats`;
   const [state, setState] = useState(null);
   const [refresh, setRefresh] = useState(0);
@@ -50,6 +50,7 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
         },
       });
       setState({ snapshot });
+      onSaved?.();
       setPage(0);
       form.reset();
     } catch (failure) {
@@ -67,6 +68,7 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
         token, method: 'POST', body: { expectedRevision: state.snapshot?.revision ?? null },
       });
       setState({ snapshot });
+      onSaved?.();
       setPage(0);
     } catch (failure) {
       setError(failure.message);
@@ -97,7 +99,7 @@ export default function SubscriptionSeats({ endpoint, item, token, onClose }) {
               {snapshot.purchasedSeats !== null && <p>{snapshot.purchasedSeats >= snapshot.seats.length
                 ? `${snapshot.purchasedSeats - snapshot.seats.length} unassigned`
                 : `${snapshot.seats.length - snapshot.purchasedSeats} assigned above the recorded purchase count`}</p>}
-              <div className="statement-table">
+              <div className="statement-table" tabIndex={0} role="region" aria-label="License seats table, scroll horizontally">
                 <table>
                   <thead><tr><th>Account</th><th>Last reported activity</th><th>Status</th></tr></thead>
                   <tbody>{snapshot.seats.slice(page * pageSize, (page + 1) * pageSize).map((seat) => (

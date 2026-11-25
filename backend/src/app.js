@@ -11,10 +11,10 @@ import { renewalRoutes } from './modules/renewals/renewal.routes.js';
 import { renewalDecisionRoutes } from './modules/renewals/renewal-decision.routes.js';
 import { paymentSourceRoutes } from './modules/payment-sources/payment-source.routes.js';
 
-export async function createApp(database) {
+export async function createApp(database, authOptions) {
   const app = express();
   app.disable('x-powered-by');
-  const auth = authModule(database);
+  const auth = authModule(database, authOptions);
   await auth.initialize();
   app.use('/api/workspaces/:workspaceId/statement-imports', express.json({ limit: '800kb' }),
     await statementImportRoutes(database, auth.requireSession));
@@ -28,6 +28,13 @@ export async function createApp(database) {
   });
   app.post('/api/auth/signup', authLimiter, auth.signup);
   app.post('/api/auth/signin', authLimiter, auth.signin);
+  const resetLimiter = rateLimit({
+    windowMs: 15 * 60_000, limit: 5,
+    standardHeaders: 'draft-8', legacyHeaders: false,
+    message: { message: 'Too many recovery requests. Try again in 15 minutes.' },
+  });
+  app.post('/api/auth/forgot-password', resetLimiter, auth.forgotPassword);
+  app.post('/api/auth/reset-password', authLimiter, auth.resetPassword);
   app.post('/api/auth/signout', auth.requireSession, auth.signout);
   app.use('/api/workspaces/:workspaceId/transactions', await transactionRoutes(database, auth.requireSession));
   app.use('/api/workspaces/:workspaceId/vendors', vendorRoutes(database, auth.requireSession));

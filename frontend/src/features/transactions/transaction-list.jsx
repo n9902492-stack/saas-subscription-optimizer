@@ -65,7 +65,7 @@ export default function TransactionList({ workspaceId, token, importVersion, onM
       ) : !current ? <p role="status">Loading transactions…</p> : (
         <>
           {!current.items.length ? <p>No transactions on this page.</p> : (
-            <div className="statement-table">
+            <div className="statement-table" tabIndex={0} role="region" aria-label="Transactions table, scroll horizontally">
               <table>
                 <caption>Transactions · page {page}</caption>
                 <thead><tr><th>Date</th><th>Merchant</th><th>Amount</th><th>Card</th><th>Vendor</th><th>Action</th></tr></thead>
