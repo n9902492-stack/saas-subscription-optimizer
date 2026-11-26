@@ -3,22 +3,27 @@ import { connectDatabase } from './config/database.js';
 
 const uri = process.env.MONGODB_URI;
 const port = Number(process.env.PORT ?? 4000);
+const host = process.env.HOST || '127.0.0.1';
+
 if (!uri || !Number.isInteger(port) || port < 1 || port > 65535) {
-  throw new Error('Set MONGODB_URI and a valid PORT in backend/.env.');
+  throw new Error('Set MONGODB_URI and a valid PORT.');
 }
 
 let client;
 try {
   client = await connectDatabase(uri);
   const app = await createApp(client.db());
-  const server = app.listen(port, '127.0.0.1', () => {
-    console.log(`API listening at http://127.0.0.1:${port}`);
+
+  const server = app.listen(port, host, () => {
+    console.log(`API listening at http://${host}:${port}`);
   });
+
   server.on('error', async () => {
     console.error('Could not start the API listener.');
     await client.close();
     process.exitCode = 1;
   });
+
   for (const signal of ['SIGINT', 'SIGTERM']) {
     process.once(signal, () => server.close(() => void client.close()));
   }
